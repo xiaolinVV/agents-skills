@@ -1,0 +1,4 @@
+interface:
+  display_name: "Git Quick Sync"
+  short_description: "快速执行多仓Git提交推送并拉取跟踪分支或upstream更新"
+  default_prompt: "Use $git-quick-sync to generate Conventional Commit messages, commit+push dirty repos, and quickly pull tracking or upstream updates."
