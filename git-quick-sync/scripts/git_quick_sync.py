@@ -232,6 +232,23 @@ def git_error_text(proc: subprocess.CompletedProcess, default: str) -> str:
     return stderr or stdout or default
 
 
+def git_has_diff(repo: Path, args: Sequence[str]) -> bool:
+    proc = run_git(repo, args, check=False)
+    if proc.returncode == 0:
+        return False
+    if proc.returncode == 1:
+        return True
+    raise GitCommandError(repo, args, proc.returncode, proc.stdout, proc.stderr)
+
+
+def list_untracked_files(repo: Path) -> List[str]:
+    return [
+        line.strip()
+        for line in run_git(repo, ["ls-files", "--others", "--exclude-standard"]).stdout.splitlines()
+        if line.strip()
+    ]
+
+
 def read_text_if_exists(path: Path) -> str:
     try:
         return path.read_text(encoding="utf-8")
@@ -329,6 +346,11 @@ def format_bmad_reasons(reasons: Sequence[str]) -> str:
 
 def build_apply_next_action_hint(result: Dict[str, object]) -> Optional[str]:
     if not result.get("commit_created"):
+        if result.get("staged_file_count", 0) == 0 and result.get("ignored_untracked_count"):
+            return (
+                "发现未跟踪文件默认未自动纳入；如需提交新文件，请先 `git add <path>` "
+                "或重试 `--stage-mode all`。"
+            )
         if result.get("error"):
             return "检查错误信息，处理后重新执行 apply。"
         return "当前没有可提交改动，无需进一步操作。"
@@ -354,16 +376,48 @@ def build_pull_next_action_hint(result: Dict[str, object]) -> Optional[str]:
     return "根据错误信息处理拉取失败原因后再重试。"
 
 
-def stage_changes(repo: Path, stage_mode: str) -> None:
+def build_stage_note(stage_mode_requested: str, stage_mode_effective: str, had_staged_changes: bool) -> str:
+    if stage_mode_requested == "auto":
+        if had_staged_changes:
+            return "检测到现有暂存区，保留用户已选择的文件集合"
+        if stage_mode_effective == "tracked":
+            return "未发现现有暂存区，自动暂存已跟踪文件改动，避免误纳入新文件"
+    if stage_mode_requested == "all":
+        return "已自动暂存全部改动（含未跟踪新文件）"
+    if stage_mode_requested == "tracked":
+        return "已自动暂存已跟踪文件改动，不包含未跟踪新文件"
+    return "保持当前暂存区不变"
+
+
+def stage_changes(repo: Path, stage_mode: str) -> Dict[str, object]:
+    untracked_files = list_untracked_files(repo)
+    had_staged_changes = git_has_diff(repo, ["diff", "--cached", "--quiet"])
+    stage_mode_effective = stage_mode
+
     if stage_mode == "all":
         run_git(repo, ["add", "-A"])
-        return
-    if stage_mode == "tracked":
+    elif stage_mode == "tracked":
         run_git(repo, ["add", "-u"])
-        return
-    if stage_mode == "none":
-        return
-    raise ValueError(f"Unsupported stage mode: {stage_mode}")
+    elif stage_mode == "auto":
+        if had_staged_changes:
+            stage_mode_effective = "none"
+        else:
+            run_git(repo, ["add", "-u"])
+            stage_mode_effective = "tracked"
+    elif stage_mode == "none":
+        pass
+    else:
+        raise ValueError(f"Unsupported stage mode: {stage_mode}")
+
+    ignored_untracked_files = untracked_files if stage_mode_effective != "all" else []
+    return {
+        "stage_mode_requested": stage_mode,
+        "stage_mode_effective": stage_mode_effective,
+        "had_staged_changes": had_staged_changes,
+        "ignored_untracked_files": ignored_untracked_files,
+        "ignored_untracked_count": len(ignored_untracked_files),
+        "stage_note": build_stage_note(stage_mode, stage_mode_effective, had_staged_changes),
+    }
 
 
 def parse_name_status(repo: Path) -> List[Dict[str, str]]:
@@ -524,7 +578,7 @@ def build_body(
 def summarize_repo(repo: Path, stage_mode: str) -> Dict[str, object]:
     repo = to_repo_root(repo)
     assert_clean_git_state_for_commit(repo)
-    stage_changes(repo, stage_mode)
+    stage_info = stage_changes(repo, stage_mode)
 
     staged_files = [
         line.strip()
@@ -550,6 +604,7 @@ def summarize_repo(repo: Path, stage_mode: str) -> Dict[str, object]:
         "repo_name": repo.name,
         "branch": branch,
         "upstream": upstream,
+        **stage_info,
         "staged_files": staged_files,
         "name_status": name_status,
         "status_counts": count_status(name_status),
@@ -841,6 +896,13 @@ def print_human_summary(data: Dict[str, object]) -> None:
     print(f"repo_name: {data['repo_name']}")
     print(f"branch: {data['branch']}")
     print(f"upstream: {data['upstream'] or '(none)'}")
+    print(
+        "stage_mode: "
+        f"requested={data.get('stage_mode_requested')} effective={data.get('stage_mode_effective')}"
+    )
+    print(f"stage_note: {data.get('stage_note')}")
+    if data.get("ignored_untracked_count"):
+        print(f"ignored_untracked_count: {data['ignored_untracked_count']}")
     print(f"staged files: {len(data['staged_files'])}")
     print(f"commit_mode: {data['commit_mode']}")
     print(f"bmad_detected: {data['bmad_detected']}")
@@ -863,6 +925,13 @@ def print_human_apply(result: Dict[str, object], verbose: bool) -> None:
     print(f"repo: {result['repo_path']}")
     print(f"branch: {result.get('branch')}")
     print(f"upstream: {result.get('upstream') or '(none)'}")
+    print(
+        "stage_mode: "
+        f"requested={result.get('stage_mode_requested')} effective={result.get('stage_mode_effective')}"
+    )
+    print(f"stage_note: {result.get('stage_note')}")
+    if result.get("ignored_untracked_count"):
+        print(f"ignored_untracked_count: {result['ignored_untracked_count']}")
     print(f"commit_mode: {result.get('commit_mode')}")
     print(f"bmad_detected: {result.get('bmad_detected')}")
     print(f"story_id: {result.get('story_id') or '(none)'}")
@@ -956,6 +1025,11 @@ def cmd_apply(args: argparse.Namespace) -> int:
             "repo_path": summary["repo_path"],
             "branch": summary["branch"],
             "upstream": summary["upstream"],
+            "stage_mode_requested": summary["stage_mode_requested"],
+            "stage_mode_effective": summary["stage_mode_effective"],
+            "stage_note": summary["stage_note"],
+            "ignored_untracked_files": summary["ignored_untracked_files"],
+            "ignored_untracked_count": summary["ignored_untracked_count"],
             "commit_mode": summary["commit_mode"],
             "bmad_detected": summary["bmad_detected"],
             "story_id": summary["story_id"],
@@ -984,6 +1058,11 @@ def cmd_apply(args: argparse.Namespace) -> int:
     result = commit_and_push(Path(summary["repo_path"]), subject, body)
     result["branch"] = summary["branch"]
     result["upstream"] = summary["upstream"]
+    result["stage_mode_requested"] = summary["stage_mode_requested"]
+    result["stage_mode_effective"] = summary["stage_mode_effective"]
+    result["stage_note"] = summary["stage_note"]
+    result["ignored_untracked_files"] = summary["ignored_untracked_files"]
+    result["ignored_untracked_count"] = summary["ignored_untracked_count"]
     result["commit_mode"] = summary["commit_mode"]
     result["bmad_detected"] = summary["bmad_detected"]
     result["story_id"] = summary["story_id"]
@@ -1048,7 +1127,7 @@ def build_parser() -> argparse.ArgumentParser:
         help="Stage changes and summarize diff for one repository",
     )
     summarize.add_argument("--repo", required=True, help="Repository path")
-    summarize.add_argument("--stage-mode", choices=["all", "tracked", "none"], default="all")
+    summarize.add_argument("--stage-mode", choices=["auto", "all", "tracked", "none"], default="all")
     summarize.add_argument("--json", action="store_true", help="Output JSON")
     summarize.set_defaults(func=cmd_summarize)
 
@@ -1057,7 +1136,7 @@ def build_parser() -> argparse.ArgumentParser:
         help="Stage, generate message, commit, and push to current upstream",
     )
     apply_parser.add_argument("--repo", required=True, help="Repository path")
-    apply_parser.add_argument("--stage-mode", choices=["all", "tracked", "none"], default="all")
+    apply_parser.add_argument("--stage-mode", choices=["auto", "all", "tracked", "none"], default="all")
     apply_parser.add_argument("--subject", help="Commit subject. Auto-generated when omitted")
     apply_parser.add_argument("--body", help="Commit body. Auto-generated when omitted")
     apply_parser.add_argument("--verbose", action="store_true", help="Show expanded staged file details")
