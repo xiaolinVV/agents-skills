@@ -44,7 +44,7 @@
 - Gate 2：
   - 批量设置 upstream
   - `git ls-remote upstream` 校验
-  - 自动 push
+  - 不执行自动 push
 
 ## 4) SSH URL 规则（强制）
 
@@ -89,6 +89,7 @@ npx bmad-method@6.0.3 install \
 - user-source：
   - `origin` 保持克隆源组织（SSH）
   - `upstream = git@gitee.com:jeecg-boot_3/<repo>.git`
+  - 最后一步不自动 push，避免把初始化状态直接写回用户现有组织
 - BMAD 两仓注意：
   - 本地目录用 `_bmad`、`_bmad-output`
   - 远程仓库名仍用 `bmad`、`bmad-output`
@@ -100,7 +101,7 @@ npx bmad-method@6.0.3 install \
 - 模式与 Gate 确认摘要
 - 每仓 remote 检查结果
 - 每仓 upstream 校验结果
-- push 结果
+- push 结果（未执行时标注 `skipped`）
 - `/bmad-help` 验证结果
 - 失败清单与重试命令
 

@@ -13,6 +13,7 @@ from __future__ import annotations
 import argparse
 import json
 import subprocess
+import sys
 from dataclasses import asdict, dataclass
 from pathlib import Path
 from typing import List, Optional
@@ -113,7 +114,11 @@ def parse_args() -> argparse.Namespace:
     parser.add_argument("--include-uniapp", action="store_true")
     parser.add_argument("--include-openspec", action="store_true")
     parser.add_argument("--verify-upstream-ls-remote", action="store_true")
-    parser.add_argument("--push", action="store_true", help="Push current branch to origin")
+    parser.add_argument(
+        "--push",
+        action="store_true",
+        help="Push current branch to origin (framework-source only; ignored in user-source)",
+    )
     parser.add_argument("--branch", help="Explicit branch name for push")
     parser.add_argument("--dry-run", action="store_true")
     parser.add_argument("--json", action="store_true", help="Print machine-readable JSON report")
@@ -124,6 +129,13 @@ def parse_args() -> argparse.Namespace:
 
     if args.origin_strategy == "update" and not args.org:
         parser.error("--org is required when origin strategy is 'update'")
+
+    if args.mode == "user-source" and args.push:
+        print(
+            "warning: --push is ignored in user-source mode; final step must not push",
+            file=sys.stderr,
+        )
+        args.push = False
 
     return args
 
@@ -211,6 +223,7 @@ def process_repo(root: Path, spec: RepoSpec, args: argparse.Namespace) -> RepoRe
         origin_changed = False
         upstream_changed = False
         verify_msg = "skipped"
+        push_msg = "push skipped: not requested"
 
         current_origin = get_remote_url(repo_path, "origin")
 
@@ -235,6 +248,7 @@ def process_repo(root: Path, spec: RepoSpec, args: argparse.Namespace) -> RepoRe
         if args.push:
             if args.dry_run:
                 pushed = True
+                push_msg = "push skipped: dry-run"
             else:
                 branch = args.branch or current_branch(repo_path)
                 proc = run_git(repo_path, ["push", "-u", "origin", branch], check=False)
@@ -242,11 +256,15 @@ def process_repo(root: Path, spec: RepoSpec, args: argparse.Namespace) -> RepoRe
                     stderr = (proc.stderr or proc.stdout).strip()
                     raise RuntimeError(f"git push failed: {stderr}")
                 pushed = True
+                push_msg = "push ok"
+        elif args.mode == "user-source":
+            push_msg = "push skipped: user-source disabled"
 
         changed = origin_changed or upstream_changed
-        detail = "ok"
+        detail_parts = ["ok", push_msg]
         if args.verify_upstream_ls_remote:
-            detail = f"ok, upstream verify: {verify_msg}"
+            detail_parts.insert(1, f"upstream verify: {verify_msg}")
+        detail = ", ".join(detail_parts)
 
         return RepoResult(
             local_dir=spec.local_dir,

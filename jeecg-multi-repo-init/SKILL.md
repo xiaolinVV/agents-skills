@@ -8,7 +8,7 @@ description: "Initialize Jeecg-Boot multi-repo workspaces in two source modes: (
 ## Overview
 执行 Jeecg-Boot 多仓脚手架初始化，统一支持两种源组织模式：
 - `framework-source`：保持原有流程不变（从 `jeecg-boot_3` 启动，业务命名目录，创建业务组织与仓库）。
-- `user-source`：由用户选择任意已有组织作为克隆源，快速落地并回补 `upstream`。
+- `user-source`：由用户选择任意已有组织作为克隆源，快速落地并回补 `upstream`，最后不自动 push。
 
 全局强制规则：
 - **Gitee 一律使用 SSH URL**（克隆、`origin`、`upstream` 全部走 SSH）。
@@ -110,13 +110,14 @@ ssh-add -l
 确认以下项目：
 1. 批量设置 `upstream=jeecg-boot_3`（SSH）
 2. `git ls-remote upstream` 校验
-3. 自动 push 当前分支
+
+> `user-source` 最后一步禁止自动 push，避免把初始化后的本地状态直接写回用户现有组织。
 
 ### Gate 2 后自动执行
 1. 保持 `origin` 为克隆源组织（SSH），不创建新组织。
 2. 批量设置 `upstream -> git@gitee.com:jeecg-boot_3/<repo>.git`。
 3. 逐仓执行 `git ls-remote upstream`。
-4. 自动 push 当前分支到 `origin`。
+4. 输出完成报告，明确标注 `push=skipped (user-source disabled)`。
 
 ## Gitee Login Fallback
 登录态失效时按固定顺序执行：
@@ -140,7 +141,7 @@ ssh-add -l
 - 模式与 Gate 关键确认项
 - 每仓 `origin` / `upstream`
 - 每仓 upstream 校验结果
-- 每仓 push 结果
+- 每仓 push 结果（未执行时明确标注 `skipped`）
 - `/bmad-help` 验证结果
 - 失败步骤与重试命令
 
@@ -159,12 +160,11 @@ scripts/rewrite_git_remotes.py \
   --verify-upstream-ls-remote \
   --push
 
-# user-source: 保持 origin，仅更新 upstream（默认SSH）
+# user-source: 保持 origin，仅更新 upstream（默认SSH），最后不 push
 scripts/rewrite_git_remotes.py \
   --mode user-source \
   --workspace-root <root> \
-  --verify-upstream-ls-remote \
-  --push
+  --verify-upstream-ls-remote
 ```
 
 ## References
