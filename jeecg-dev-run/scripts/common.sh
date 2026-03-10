@@ -282,7 +282,7 @@ wait_for_http_code() {
 
   start_ts="$(date +%s)"
   while true; do
-    code="$(curl -s -o /tmp/jeecg-dev-run-http.tmp -w "%{http_code}" --max-time 5 "${url}" || true)"
+    code="$(curl --noproxy '*' -s -o /tmp/jeecg-dev-run-http.tmp -w "%{http_code}" --max-time 5 "${url}" || true)"
     if [[ "${code}" == "${expected}" ]]; then
       return 0
     fi

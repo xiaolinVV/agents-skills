@@ -76,6 +76,7 @@ Behavior:
 - `stop-local-stack.sh` only stops processes that were started by the managed start script
 - If a default target port is busy, the start script picks the next free local port and writes the real addresses to `stack.env`
 - `inspect-local-stack.sh --json` returns machine-readable state and action hints such as `can_stop_background` or `can_clear_session`
+- Local HTTP probes bypass shell proxy variables for `127.0.0.1` so verification still works on machines that export `http_proxy` / `https_proxy`
 
 Default convention:
 
@@ -158,13 +159,13 @@ Expected warnings:
 Backend:
 
 ```bash
-curl -s -o /tmp/jeecg-dev-run-backend.out -w "%{http_code}\n" http://127.0.0.1:8080/jeecg-boot/
+curl --noproxy '*' -s -o /tmp/jeecg-dev-run-backend.out -w "%{http_code}\n" http://127.0.0.1:8080/jeecg-boot/
 ```
 
 Frontend:
 
 ```bash
-curl -s -o /tmp/jeecg-dev-run-frontend.out -w "%{http_code}\n" http://127.0.0.1:3000/
+curl --noproxy '*' -s -o /tmp/jeecg-dev-run-frontend.out -w "%{http_code}\n" http://127.0.0.1:3000/
 ```
 
 ## Failure Triage Rule

@@ -10,7 +10,7 @@ load_state_config
 
 check_http() {
   local url="$1"
-  curl -s -o /tmp/jeecg-dev-run-status.tmp -w "%{http_code}" --max-time 5 "${url}" || true
+  curl --noproxy '*' -s -o /tmp/jeecg-dev-run-status.tmp -w "%{http_code}" --max-time 5 "${url}" || true
 }
 
 print_service() {
