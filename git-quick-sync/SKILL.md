@@ -9,7 +9,7 @@ description: Automatically generate Chinese Conventional Commit messages and exe
 
 Use this skill to standardize and automate Git sync workflows:
 - detect single repo vs multi-repo workspace
-- use safe staging by default (`--stage-mode auto`)
+- use full staging by default (`--stage-mode all`)
 - generate Conventional Commit message in Chinese
 - commit and immediately push to current branch upstream
 - pull updates from tracking upstream or a specified remote branch
@@ -23,10 +23,9 @@ Use this skill to standardize and automate Git sync workflows:
   - if current path is a Git repo: treat as single repo
   - else scan child directories for `.git`
 - Multi-repo commit selection: commit all dirty repos by default
-- Stage mode default for this skill: `auto`
-  - if staged changes already exist: preserve current index and do not auto-add more files
-  - otherwise stage tracked changes only (`git add -u`)
-  - untracked files are left out by default; use `--stage-mode all` only when user explicitly wants a full snapshot
+- Stage mode default for this skill: `all`
+  - automatically stage all changes including untracked files
+  - use `--stage-mode tracked` to only stage tracked changes, or `--stage-mode auto` for smart staging
 - Push target: current branch upstream (`git push`)
 - Pull strategy default: `merge`
 - Dirty repo pull default: auto stash + pull + stash pop
@@ -164,7 +163,7 @@ done
 
 - If merge/rebase/cherry-pick/revert state exists, fail fast for that repo.
 - If unresolved conflicts exist, fail fast for that repo.
-- In `auto` mode, untracked files are not staged automatically; surface a clear hint instead of silently committing them.
+- In `tracked` or `auto` mode, untracked files are not staged automatically; surface a clear hint instead of silently committing them.
 - If there is no staged change, `apply` returns success with `commit_created=false`.
 - If commit succeeds but push fails, return:
   - `commit_created=true`

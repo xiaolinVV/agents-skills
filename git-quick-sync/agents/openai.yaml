@@ -1,4 +1,4 @@
 interface:
   display_name: "Git Quick Sync"
   short_description: "快速执行多仓Git提交推送并拉取跟踪分支或upstream更新"
-  default_prompt: "Use $git-quick-sync to generate Conventional Commit messages, commit+push dirty repos with --stage-mode auto by default, and quickly pull tracking or upstream updates. Only use --stage-mode all when the user explicitly wants to include untracked files."
+  default_prompt: "Use $git-quick-sync to generate Conventional Commit messages, commit+push dirty repos with --stage-mode all by default (includes untracked files), and quickly pull tracking or upstream updates. Use --stage-mode tracked or --stage-mode auto when finer control is needed."
