@@ -239,6 +239,7 @@ def preflight_state() -> Dict[str, Any]:
     ffmpeg_info = command_version(["ffmpeg", "-version"])
     ffprobe_info = command_version(["ffprobe", "-version"])
     ejs_info = pip_show("yt-dlp-ejs")
+    secretstorage_info = pip_show("secretstorage")
     js_info = detect_js_runtime()
     browser_info = detect_browsers()
     platform_tools = detect_platform_tools()
@@ -252,6 +253,7 @@ def preflight_state() -> Dict[str, Any]:
         "ffmpeg": ffmpeg_info,
         "ffprobe": ffprobe_info,
         "yt_dlp_ejs": ejs_info,
+        "secretstorage": secretstorage_info,
         "js_runtime": js_info,
         "browsers": browser_info,
         "ffmpeg_install_hint": ffmpeg_hint,
@@ -295,6 +297,7 @@ def print_preflight(payload: Dict[str, Any]) -> None:
     ffmpeg = payload["ffmpeg"]
     ffprobe = payload["ffprobe"]
     ejs = payload["yt_dlp_ejs"]
+    secretstorage = payload["secretstorage"]
     js_runtime = payload["js_runtime"]
     browsers = payload["browsers"]
     print(
@@ -304,6 +307,7 @@ def print_preflight(payload: Dict[str, Any]) -> None:
     print(f"- ffmpeg: {'yes' if ffmpeg['available'] else 'no'} {ffmpeg.get('version') or ''}".rstrip())
     print(f"- ffprobe: {'yes' if ffprobe['available'] else 'no'} {ffprobe.get('version') or ''}".rstrip())
     print(f"- yt-dlp-ejs: {'yes' if ejs['available'] else 'no'} {ejs.get('version') or ''}".rstrip())
+    print(f"- secretstorage: {'yes' if secretstorage['available'] else 'no'} {secretstorage.get('version') or ''}".rstrip())
     print(f"- preferred JS runtime: {js_runtime.get('preferred') or 'missing'}")
     available_browsers = ", ".join(browsers["available"]) if browsers["available"] else "none"
     print(f"- browser cookies candidates: {available_browsers}")
@@ -415,6 +419,13 @@ def build_auth_args(browser: Optional[str], cookies_file: Optional[str]) -> Tupl
         if browser not in browser_info["available"]:
             available = ", ".join(browser_info["available"]) or "none"
             raise UsageError(f"Browser '{browser}' is not available. Available browser cookies sources: {available}")
+        if sys.platform.startswith("linux") and browser in {"chrome", "chromium"}:
+            secretstorage_info = pip_show("secretstorage")
+            if not secretstorage_info["available"]:
+                raise UsageError(
+                    "Linux Chrome/Chromium cookies require the Python package 'secretstorage'. "
+                    "Install it with: python3 -m pip install --user --break-system-packages -U secretstorage"
+                )
         args.extend(["--cookies-from-browser", browser])
         auth_meta["used_browser_cookies"] = True
     elif cookies_file:
@@ -793,7 +804,7 @@ def command_bootstrap(args: argparse.Namespace) -> int:
         install_name = f"install yt-dlp ({args.channel}) in user site"
     if args.channel == "nightly":
         package_args.append("--pre")
-    package_args.append("yt-dlp[default]")
+    package_args.extend(["yt-dlp[default]", "secretstorage"])
     pip_proc = run_command(package_args)
     steps.append(
         {

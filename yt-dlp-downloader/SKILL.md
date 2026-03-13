@@ -7,6 +7,17 @@ description: Download one or more public video or audio URLs with yt-dlp, option
 
 Use this skill to turn one or more URLs into downloaded media files on the local machine.
 
+## Pitfalls already hit in real use
+
+Record these and treat them as facts until reality proves otherwise:
+
+- Ubuntu 24.04 style Python environments may reject normal pip installs with `externally-managed-environment`.
+- Some machines also lack `python3-venv` / `ensurepip`, so a managed venv may fail before it starts.
+- Recent yt-dlp + YouTube flows may still fail unless `--js-runtimes` is passed explicitly, even when `node` is already installed.
+- Public YouTube downloads may hit `Sign in to confirm you’re not a bot`; in that case, switch to browser cookies instead of pretending the URL is bad.
+- On Linux, Chrome/Chromium cookie decryption may fail unless the Python package `secretstorage` is installed.
+- Xiaohongshu can work anonymously for some URLs and fail hard for others. Do not over-generalize from one success.
+
 ## Defaults
 
 - Save files to `~/视频/yt-dlp` unless the user says otherwise.
@@ -45,6 +56,7 @@ If the user explicitly wants the nightly build, use `--channel nightly`.
 Bootstrap behavior:
 - try a managed virtual environment first
 - if Ubuntu/Debian blocks that because `python3-venv` or `ensurepip` is missing, fall back to `pip install --user --break-system-packages`
+- also install `secretstorage` so Chrome/Chromium cookies on Linux do not fail later
 
 Do **not** pretend the environment is ready when `ffmpeg` is missing. Return the install hint instead.
 
@@ -99,6 +111,8 @@ Chrome:
 ```bash
 python3 scripts/yt_dlp_downloader.py download --browser chrome 'URL'
 ```
+
+On Linux, if Chrome/Chromium cookies are needed, make sure `preflight` shows `secretstorage: yes`. If not, run `bootstrap` again or install it manually.
 
 Firefox:
 
@@ -156,6 +170,7 @@ Do not pile on random flags by default. Extra flags exist as an escape hatch.
 - If `ffmpeg` is missing, fail fast and return the install hint.
 - If `probe` or `download` fails, return the extractor, stderr tail, and the exact final paths that were produced before failure.
 - For YouTube, expect that public probing/downloading may still require cookies because of anti-bot checks even when `yt-dlp-ejs` and a JS runtime are installed.
+- For Linux Chrome/Chromium cookies, expect a hard failure if `secretstorage` is missing. Fix that first instead of retrying blindly.
 - For Xiaohongshu, state the truth: yt-dlp may have an extractor, but the site is unstable and frequently blocked by anti-bot or CAPTCHA.
 - Do not claim fixed platform support if the extractor currently fails.
 

@@ -78,6 +78,30 @@ The README documents:
 
 On Linux, Chromium-based browser cookie decryption may require `secretstorage` for keyring access. Browser cookies are optional and should only be used when the user explicitly wants logged-in content.
 
+## Real-world failure notes from this skill
+
+These are implementation notes learned during actual use on Ubuntu/Linux:
+
+- PEP 668 may block plain `pip install -U "yt-dlp[default]"` with `externally-managed-environment`.
+- `python3 -m venv` may also fail if `python3-venv` / `ensurepip` is missing.
+- Because of those two facts, the skill must tolerate a fallback to:
+
+```bash
+python3 -m pip install --user --break-system-packages -U "yt-dlp[default]" secretstorage
+```
+
+- Even with `node` installed, YouTube may still need an explicit `--js-runtimes node:/path/to/node`.
+- Anonymous YouTube requests may still fail with:
+
+```text
+Sign in to confirm you’re not a bot
+```
+
+  In that case, browser cookies are the next practical step.
+
+- On Linux, Chrome/Chromium cookie extraction can fail with messages about missing `secretstorage` or failed cookie decryption. Install `secretstorage` before retrying.
+- Xiaohongshu is inconsistent: some public URLs download cleanly, some fail because of site-side anti-bot changes. Treat every URL as trial-by-fire.
+
 ### Playlist control
 
 The README documents:
@@ -134,10 +158,11 @@ These are implementation decisions for this skill, not upstream API guarantees:
 - if Ubuntu/Debian blocks venv bootstrapping because `python3-venv` or `ensurepip` is missing, fall back to:
 
 ```bash
-python3 -m pip install --user --break-system-packages -U "yt-dlp[default]"
+python3 -m pip install --user --break-system-packages -U "yt-dlp[default]" secretstorage
 ```
 
 - when a JS runtime is available, pass `--js-runtimes` explicitly so YouTube probing/downloading does not rely on defaults
+- when Linux Chrome/Chromium cookies are requested, `secretstorage` must be available or the skill should fail early with an actionable message
 
 ### Xiaohongshu
 
