@@ -1,0 +1,4 @@
+interface:
+  display_name: "YT-DLP Downloader"
+  short_description: "下载视频链接，支持Cookies、MP4优先与大列表分批"
+  default_prompt: "Use $yt-dlp-downloader to preflight dependencies, download one or more video URLs into ~/视频/yt-dlp, prefer MP4 when merging, optionally use browser cookies, and handle huge playlists incrementally in batches."
