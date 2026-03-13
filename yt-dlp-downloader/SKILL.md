@@ -21,6 +21,7 @@ Record these and treat them as facts until reality proves otherwise:
 ## Defaults
 
 - Save files to `~/视频/yt-dlp` unless the user says otherwise.
+- In OpenClaw Feishu chats, prefer an output directory inside the current workspace such as `./tmp/yt-dlp` so downloaded MP4 files can be re-sent as local media reliably.
 - Prefer yt-dlp's best video + best audio selection: `-f bv*+ba/b`.
 - Prefer MP4 when yt-dlp must merge streams: `--merge-output-format mp4`.
 - Keep the original container when yt-dlp downloads a single ready-made file and no merge is needed.
@@ -28,6 +29,18 @@ Record these and treat them as facts until reality proves otherwise:
 - If a supported JavaScript runtime exists, pass `--js-runtimes` automatically so YouTube does not silently degrade.
 - Use `--print after_move:filepath` to report final paths after post-processing.
 - For very large playlists, switch to archive-based batched downloads.
+
+## OpenClaw Feishu auto-return
+
+- When this skill runs inside OpenClaw on the Feishu channel and the download output includes MP4 files, automatically send the actual MP4 file(s) back as previewable Feishu video/media messages by default.
+- Do this even if the user did not explicitly say “send it back”. Do not default to replying with only a filesystem path.
+- For 1 MP4: send it automatically as a previewable video message.
+- For 2-3 MP4 files: send each automatically as a previewable video message.
+- For 4+ MP4 files: automatically send the first 3 as previewable video messages, then summarize how many remain and where they were saved.
+- Use the `message` tool to send the real local file as media, not as path text.
+- Prefer sending from a path inside the current workspace. If the final MP4 path is outside the workspace or otherwise unsafe for local media sending, copy the MP4 into `./tmp/yt-dlp-send/` first and send from there.
+- Fallback order: previewable MP4 video message -> real file attachment -> plain text path or error explanation only if file sending fails.
+- After successfully delivering the user-visible file(s) with the `message` tool, reply with `NO_REPLY` to avoid duplicate chat messages.
 
 ## Workflow
 
@@ -85,6 +98,14 @@ Use:
 ```bash
 python3 scripts/yt_dlp_downloader.py download 'URL1' 'URL2'
 ```
+
+In OpenClaw Feishu chats, prefer:
+
+```bash
+python3 scripts/yt_dlp_downloader.py download --output-dir ./tmp/yt-dlp 'URL1' 'URL2'
+```
+
+This keeps the final MP4 files in a workspace-local path so they can be auto-returned as previewable Feishu video messages more reliably.
 
 ### Force single-video behavior
 
