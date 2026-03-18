@@ -166,6 +166,8 @@ The workbook layout is fixed:
 - Row 2: table headers
 - Row 3+: detail rows
 - Bottom: summary row
+- Long-text cells such as `功能说明` and `备注` should keep `wrapText` enabled; the bundled generator estimates row height from the visible text and column width so multiline content is not collapsed by a fixed short row height
+- In template mode, keep `功能说明` readable as a client-facing narrative column; prefer concise but complete wording rather than packing multiple unrelated features into one cell
 
 If `project_name` is empty, the title becomes `功能清单报价表`.
 

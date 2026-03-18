@@ -12,6 +12,7 @@ import argparse
 import datetime as dt
 import json
 import math
+import unicodedata
 import zipfile
 from dataclasses import dataclass
 from decimal import Decimal, ROUND_HALF_UP
@@ -36,6 +37,10 @@ STYLE_NOTE = 13
 STYLE_ALT_TEXT = 14
 STYLE_ALT_NUMBER = 15
 STYLE_ALT_CURRENCY = 16
+
+DEFAULT_DATA_ROW_HEIGHT = 24
+ROW_LINE_HEIGHT = 16
+MAX_DATA_ROW_HEIGHT = 180
 
 
 @dataclass
@@ -217,13 +222,39 @@ def project_title(payload: Dict[str, object]) -> str:
     return f"{name}功能清单报价表" if name else "功能清单报价表"
 
 
-def row_height_for_text(*values: str) -> int:
-    text = " ".join(v for v in values if v)
-    if len(text) > 70:
-        return 42
-    if len(text) > 36:
-        return 32
-    return 24
+def display_width(text: str) -> int:
+    width = 0
+    for ch in text:
+        if ch == "\t":
+            width += 4
+        elif ch in "\r\n":
+            continue
+        elif unicodedata.east_asian_width(ch) in {"F", "W"}:
+            width += 2
+        else:
+            width += 1
+    return width
+
+
+def wrapped_line_count(text: str, column_width: int) -> int:
+    if column_width <= 0:
+        return 1
+    if not text:
+        return 1
+
+    logical_lines = text.replace("\r\n", "\n").replace("\r", "\n").split("\n")
+    total_lines = 0
+    for logical_line in logical_lines:
+        line_width = display_width(logical_line)
+        total_lines += max(1, math.ceil(line_width / column_width))
+    return max(total_lines, 1)
+
+
+def row_height_for_cells(cells: Sequence[tuple[str, int]]) -> int:
+    max_lines = 1
+    for text, column_width in cells:
+        max_lines = max(max_lines, wrapped_line_count(text, column_width))
+    return min(MAX_DATA_ROW_HEIGHT, max(DEFAULT_DATA_ROW_HEIGHT, 8 + max_lines * ROW_LINE_HEIGHT))
 
 
 def xml_text_cell(ref: str, value: str, style_id: int) -> str:
@@ -281,7 +312,7 @@ def quote_sheet_template(payload: Dict[str, object], items: List[QuoteItem], rat
         "小计（元）",
         "备注",
     ]
-    widths = [8, 16, 16, 24, 42, 16, 16, 18, 28]
+    widths = [8, 16, 16, 24, 48, 16, 16, 18, 28]
     last_col = col_letter(len(headers))
     merges = [f"A1:{last_col}1"]
     rows: List[str] = []
@@ -309,7 +340,14 @@ def quote_sheet_template(payload: Dict[str, object], items: List[QuoteItem], rat
             xml_formula_cell(f"H{row_num}", f"F{row_num}*G{row_num}", line_total, currency_style),
             xml_text_cell(f"I{row_num}", note, text_style),
         ]
-        rows.append(make_row_xml(row_num, cells, height=row_height_for_text(item.description, note)))
+        wrapped_cells = [
+            (item.module_l1, widths[1]),
+            (item.module_l2, widths[2]),
+            (item.feature, widths[3]),
+            (item.description, widths[4]),
+            (note, widths[8]),
+        ]
+        rows.append(make_row_xml(row_num, cells, height=row_height_for_cells(wrapped_cells)))
 
     sum_row = data_start_row + len(items)
     merges.append(f"A{sum_row}:E{sum_row}")
@@ -378,14 +416,14 @@ def quote_sheet_reuse(payload: Dict[str, object], items: List[QuoteItem], rate: 
         currency_style = STYLE_ALT_CURRENCY if alt else STYLE_BODY_CURRENCY
 
         cells: List[str] = []
-        row_text_values: List[str] = []
+        wrapped_cells: List[tuple[str, int]] = []
         for col_num, value in enumerate(base_row, start=1):
             ref = f"{col_letter(col_num)}{row_num}"
             if isinstance(value, (int, float)):
                 cells.append(xml_number_cell(ref, float(value), number_style))
             else:
                 text_value = str(value)
-                row_text_values.append(text_value)
+                wrapped_cells.append((text_value, widths[col_num - 1]))
                 cells.append(xml_text_cell(ref, text_value, text_style))
 
         line_total = item.estimated_days * rate
@@ -401,7 +439,7 @@ def quote_sheet_reuse(payload: Dict[str, object], items: List[QuoteItem], rate: 
                 ),
             ]
         )
-        rows.append(make_row_xml(row_num, cells, height=row_height_for_text(*row_text_values, item.note, item.source_ref)))
+        rows.append(make_row_xml(row_num, cells, height=row_height_for_cells(wrapped_cells)))
 
     sum_row = data_start_row + len(base_rows)
     label_end_col = max(1, quote_days_col - 1)
