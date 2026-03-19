@@ -1,0 +1,6 @@
+# Local development state
+.dev/
+
+# Python bytecode / caches
+__pycache__/
+*.py[cod]
