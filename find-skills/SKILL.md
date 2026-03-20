@@ -62,9 +62,11 @@ Preferred install order:
 
 1. Try `skillhub-canonical <slug>` when the result comes from `skillhub`.
    - This local wrapper installs into `~/.agents/skills`, links into detected agents (including OpenClaw Workspace), and then git commit/pushes the canonical repo.
-2. For updates of already-installed SkillHub skills, use `skillhub-canonical upgrade <slug>` or `skillhub-canonical update --all`.
+   - It now prefers SkillHub first and automatically falls back to ClawHub when SkillHub install fails or is unavailable.
+2. For updates of already-installed skills on this machine, use `skillhub-canonical upgrade <slug>` or `skillhub-canonical update --all`.
+   - These commands prefer SkillHub-managed entries first and can continue with ClawHub-managed entries when needed.
 3. If `skillhub-canonical` is unavailable but `skillhub` exists, use `skillhub --dir ~/.agents/skills install <slug>` / `skillhub --dir ~/.agents/skills upgrade ...` and then link/commit manually.
-4. If no `skillhub` candidate exists, use `clawhub install <slug>` only when the user explicitly wants the fallback source.
+4. If you intentionally want to bypass fallback behavior, add `--no-fallback` to `skillhub-canonical`.
 
 Before install, summarize source, version, and notable risk signals.
 
