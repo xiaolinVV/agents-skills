@@ -9,12 +9,15 @@ description: Manage canonical skills in ~/.agents/skills and create/check/repair
 
 Keep `~/.agents/skills` as the single source of truth and symlink into detected agent skill directories using `scripts/skills_symlink_manager.py`.
 
-## Commands (A/B/C/D)
+Current coverage includes major local agents plus **OpenClaw Workspace** (`~/.openclaw/workspace/skills`).
+
+## Commands (A/B/C/D/E)
 
 - **C — Status**: show link state for detected agents and canonical skills.
 - **A — Link one skill**: create symlinks for a single skill.
 - **B — Link all skills**: create symlinks for every skill under `~/.agents/skills`.
 - **D — Fix**: force-repair conflicts by replacing wrong links or existing folders.
+- **E — SkillHub canonical install**: install a SkillHub skill directly into `~/.agents/skills`, then link + Git commit/push.
 
 ## Safety rules
 
@@ -37,7 +40,7 @@ Keep `~/.agents/skills` as the single source of truth and symlink into detected 
 ## Examples
 
 ```bash
-# C: status for all detected agents
+# C: status for all detected agents (now includes OpenClaw Workspace when present)
 python3 scripts/skills_symlink_manager.py status --verbose
 
 # A: link one skill (dry run)
@@ -50,11 +53,17 @@ python3 scripts/skills_symlink_manager.py link --all-skills
 python3 scripts/skills_symlink_manager.py fix --skill my-skill --dry-run
 
 # Limit to specific agents
-python3 scripts/skills_symlink_manager.py status --agents claude-code,codex
+python3 scripts/skills_symlink_manager.py --agents claude-code,codex,openclaw-workspace status
 
 # JSON output + prefix filter
-python3 scripts/skills_symlink_manager.py status --prefix my- --json
+python3 scripts/skills_symlink_manager.py --prefix my- status --json
 
 # JSONL output + exclude prefix
-python3 scripts/skills_symlink_manager.py status --exclude-prefix tmp- --json-lines
+python3 scripts/skills_symlink_manager.py --exclude-prefix tmp- status --json-lines
+
+# E: install a SkillHub skill into canonical repo, link it, then git commit/push
+python3 scripts/skillhub_canonical.py caldav-calendar
+
+# Same thing via convenience wrapper
+skillhub-canonical caldav-calendar
 ```

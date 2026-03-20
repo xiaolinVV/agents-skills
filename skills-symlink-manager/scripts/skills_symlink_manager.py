@@ -69,6 +69,12 @@ def build_agents(home: Path, cwd: Path) -> Dict[str, AgentConfig]:
             "~/.claude/skills",
             ["~/.claude"],
         ),
+        "openclaw-workspace": cfg(
+            "openclaw-workspace",
+            "OpenClaw Workspace",
+            "~/.openclaw/workspace/skills",
+            ["~/.openclaw/workspace", "~/.openclaw/openclaw.json"],
+        ),
         "clawdbot": cfg(
             "clawdbot",
             "Clawdbot",
