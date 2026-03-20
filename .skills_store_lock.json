@@ -18,6 +18,12 @@
       "zip_url": "https://lightmake.site/api/v1/download?slug=summarize",
       "source": "skillhub",
       "version": "1.0.0"
+    },
+    "ssh-remote-sanitized": {
+      "name": "Ssh Remote Sanitized",
+      "zip_url": "https://lightmake.site/api/v1/download?slug=ssh-remote-sanitized",
+      "source": "skillhub",
+      "version": "1.0.0"
     }
   }
 }
