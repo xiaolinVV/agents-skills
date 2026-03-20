@@ -17,7 +17,7 @@ Current coverage includes major local agents plus **OpenClaw Workspace** (`~/.op
 - **A — Link one skill**: create symlinks for a single skill.
 - **B — Link all skills**: create symlinks for every skill under `~/.agents/skills`.
 - **D — Fix**: force-repair conflicts by replacing wrong links or existing folders.
-- **E — SkillHub canonical install**: install a SkillHub skill directly into `~/.agents/skills`, then link + Git commit/push.
+- **E — SkillHub canonical install/update**: install or upgrade SkillHub skills directly in `~/.agents/skills`, then link + Git commit/push.
 
 ## Safety rules
 
@@ -61,9 +61,18 @@ python3 scripts/skills_symlink_manager.py --prefix my- status --json
 # JSONL output + exclude prefix
 python3 scripts/skills_symlink_manager.py --exclude-prefix tmp- status --json-lines
 
-# E: install a SkillHub skill into canonical repo, link it, then git commit/push
+# E1: install a SkillHub skill into canonical repo, link it, then git commit/push
 python3 scripts/skillhub_canonical.py caldav-calendar
 
 # Same thing via convenience wrapper
 skillhub-canonical caldav-calendar
+
+# E2: upgrade one installed skill, then relink + git commit/push
+skillhub-canonical upgrade caldav-calendar
+
+# E3: upgrade all installed SkillHub skills in canonical repo
+skillhub-canonical update --all
+
+# E4: check available upgrades without changing files
+skillhub-canonical upgrade --check-only
 ```
