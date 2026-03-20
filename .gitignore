@@ -4,3 +4,7 @@
 # Python bytecode / caches
 __pycache__/
 *.py[cod]
+
+# Node / JS dependencies
+node_modules/
+npm-debug.log*

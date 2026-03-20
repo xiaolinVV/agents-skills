@@ -61,7 +61,7 @@ If the user wants to proceed, you can install the skill for them.
 Preferred install order:
 
 1. Try `skillhub-canonical <slug>` when the result comes from `skillhub`.
-   - This local wrapper installs into `~/.agents/skills`, links into detected agents (including OpenClaw Workspace), and then git commit/pushes the canonical repo.
+   - This local wrapper installs into `~/.agents/skills`, auto-installs JS deps for package-based skills, links into detected agents (including OpenClaw Workspace), and then git commit/pushes the canonical repo.
    - It now prefers SkillHub first and automatically falls back to ClawHub when SkillHub install fails or is unavailable.
 2. For updates of already-installed skills on this machine, use `skillhub-canonical upgrade <slug>` or `skillhub-canonical update --all`.
    - These commands prefer SkillHub-managed entries first and can continue with ClawHub-managed entries when needed.

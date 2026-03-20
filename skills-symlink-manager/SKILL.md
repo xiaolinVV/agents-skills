@@ -17,7 +17,7 @@ Current coverage includes major local agents plus **OpenClaw Workspace** (`~/.op
 - **A — Link one skill**: create symlinks for a single skill.
 - **B — Link all skills**: create symlinks for every skill under `~/.agents/skills`.
 - **D — Fix**: force-repair conflicts by replacing wrong links or existing folders.
-- **E — SkillHub canonical install/update**: install or upgrade skills directly in `~/.agents/skills`; prefer SkillHub first, then fallback to ClawHub if needed; then link + Git commit/push.
+- **E — SkillHub canonical install/update**: install or upgrade skills directly in `~/.agents/skills`; prefer SkillHub first, then fallback to ClawHub if needed; for skills with `package.json`, auto-install dependencies; then link + Git commit/push.
 
 ## Safety rules
 

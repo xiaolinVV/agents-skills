@@ -14,6 +14,7 @@ Behavior summary:
 - Prefer SkillHub first.
 - If SkillHub install/upgrade is unavailable or fails, fallback to ClawHub.
 - Keep ~/.agents/skills as the canonical repo.
+- Automatically install JS dependencies for skills that include package.json.
 - Relink changed skills into detected agent skill directories.
 - Git add / commit / push the canonical repo.
 """
@@ -28,7 +29,7 @@ import shutil
 import subprocess
 import sys
 from pathlib import Path
-from typing import Iterable, List, Optional, Sequence
+from typing import Iterable, List, Optional, Sequence, Tuple
 
 
 DEFAULT_CANONICAL = "~/.agents/skills"
@@ -152,6 +153,7 @@ def build_common_parser(description: str) -> argparse.ArgumentParser:
         help='ClawHub CLI command for fallback: "auto" (default), "clawhub", or e.g. "npx -y clawhub"',
     )
     parser.add_argument("--no-fallback", action="store_true", help="Disable fallback to ClawHub when SkillHub fails or is unavailable")
+    parser.add_argument("--no-deps", action="store_true", help="Skip automatic dependency installation for package-based skills")
     parser.add_argument("--agents", action="append", help="Comma-separated list of agent keys to target during linking")
     parser.add_argument("--all-agents", action="store_true", help="Link to all known agents instead of only detected ones")
     parser.add_argument("--force-links", action="store_true", help="Replace conflicting link targets when linking")
@@ -166,7 +168,7 @@ def build_common_parser(description: str) -> argparse.ArgumentParser:
 
 def build_install_parser() -> argparse.ArgumentParser:
     parser = build_common_parser(
-        "Install a skill into ~/.agents/skills. Prefer SkillHub first and fallback to ClawHub if needed; then relink and git commit/push."
+        "Install a skill into ~/.agents/skills. Prefer SkillHub first and fallback to ClawHub if needed; then install dependencies, relink, and git commit/push."
     )
     parser.add_argument("slug", help="Skill slug to install")
     parser.add_argument("--force-install", action="store_true", help="Overwrite existing folder when supported by the source CLI")
@@ -175,7 +177,7 @@ def build_install_parser() -> argparse.ArgumentParser:
 
 def build_upgrade_parser() -> argparse.ArgumentParser:
     parser = build_common_parser(
-        "Upgrade installed skills inside ~/.agents/skills. Prefer SkillHub-managed entries, fallback to ClawHub-managed entries, then relink and git commit/push."
+        "Upgrade installed skills inside ~/.agents/skills. Prefer SkillHub-managed entries, fallback to ClawHub-managed entries, then install dependencies, relink, and git commit/push."
     )
     parser.add_argument("slug", nargs="?", help="Optional skill slug to upgrade. If omitted, upgrade all installed skills.")
     parser.add_argument("--all", action="store_true", help="Upgrade all installed skills (same as omitting slug)")
@@ -192,7 +194,8 @@ def build_root_parser() -> argparse.ArgumentParser:
             "Canonical SkillHub helper for ~/.agents/skills.\n\n"
             "Default usage is backward-compatible: `skillhub-canonical <slug>` installs a skill.\n"
             "Explicit subcommands are also supported: install / upgrade / update.\n"
-            "SkillHub is preferred first; ClawHub is used as fallback when needed."
+            "SkillHub is preferred first; ClawHub is used as fallback when needed.\n"
+            "For package-based skills, JS dependencies are installed automatically unless --no-deps is used."
         ),
         formatter_class=argparse.RawTextHelpFormatter,
     )
@@ -200,6 +203,7 @@ def build_root_parser() -> argparse.ArgumentParser:
         "Examples:\n"
         "  skillhub-canonical caldav-calendar\n"
         "  skillhub-canonical install caldav-calendar --no-push\n"
+        "  skillhub-canonical install wechat-article-extractor-skill\n"
         "  skillhub-canonical upgrade caldav-calendar\n"
         "  skillhub-canonical update --all\n"
         "  skillhub-canonical upgrade --check-only\n"
@@ -262,6 +266,63 @@ def maybe_link_skills(*, args: argparse.Namespace, canonical: Path, symlink_mana
         all_skills=all_skills,
     )
     run_cmd(cmd, cwd=canonical, dry_run=args.dry_run)
+
+
+def detect_js_install_command(skill_dir: Path) -> Tuple[List[str], List[str]]:
+    package_json = skill_dir / "package.json"
+    if not package_json.exists():
+        return [], []
+
+    if (skill_dir / "pnpm-lock.yaml").exists() and shutil.which("pnpm"):
+        return ["pnpm", "install", "--frozen-lockfile"], ["pnpm-lock.yaml"]
+
+    if (skill_dir / "yarn.lock").exists() and shutil.which("yarn"):
+        return ["yarn", "install", "--frozen-lockfile"], ["yarn.lock"]
+
+    if (skill_dir / "bun.lockb").exists() and shutil.which("bun"):
+        return ["bun", "install", "--frozen-lockfile"], ["bun.lockb"]
+
+    if (skill_dir / "bun.lock").exists() and shutil.which("bun"):
+        return ["bun", "install", "--frozen-lockfile"], ["bun.lock"]
+
+    if (skill_dir / "package-lock.json").exists() or (skill_dir / "npm-shrinkwrap.json").exists():
+        if shutil.which("npm"):
+            lock_names = []
+            for name in ("package-lock.json", "npm-shrinkwrap.json"):
+                if (skill_dir / name).exists():
+                    lock_names.append(name)
+            return ["npm", "ci"], lock_names
+        return [], []
+
+    if shutil.which("npm"):
+        return ["npm", "install", "--package-lock=false"], []
+
+    return [], []
+
+
+def maybe_install_dependencies(*, args: argparse.Namespace, canonical: Path, skills: List[str]) -> List[str]:
+    if args.no_deps:
+        return []
+
+    tracked_paths: List[str] = []
+    for slug in unique_keep_order(skills):
+        skill_dir = canonical / slug
+        package_json = skill_dir / "package.json"
+        if not package_json.exists():
+            continue
+
+        cmd, lock_names = detect_js_install_command(skill_dir)
+        if not cmd:
+            print(f"warn: {slug} has package.json but no supported package manager is available; skipped dependency install.", file=sys.stderr)
+            continue
+
+        print(f"info: installing JS dependencies for {slug}")
+        run_cmd(cmd, cwd=skill_dir, dry_run=args.dry_run)
+
+        for name in lock_names:
+            tracked_paths.append(f"{slug}/{name}")
+
+    return unique_keep_order(tracked_paths)
 
 
 def maybe_git_commit(*, args: argparse.Namespace, canonical: Path, tracked_paths: List[str], default_message: str) -> int:
@@ -361,9 +422,10 @@ def run_install_mode(argv: List[str], script_dir: Path) -> int:
             raise SystemExit(clawhub_code)
         used_source = "clawhub-fallback"
 
+    dep_paths = maybe_install_dependencies(args=args, canonical=canonical, skills=[args.slug])
     maybe_link_skills(args=args, canonical=canonical, symlink_manager=symlink_manager, skills=[args.slug])
 
-    tracked_paths = [args.slug]
+    tracked_paths = [args.slug, *dep_paths]
     if lockfile_path(canonical).exists() or args.dry_run:
         tracked_paths.append(LOCKFILE_NAME)
     if clawhub_lockfile_path(canonical).exists() or args.dry_run:
@@ -470,9 +532,10 @@ def run_upgrade_mode(argv: List[str], script_dir: Path) -> int:
     else:
         relink_skills = unique_keep_order([*skillhub_before, *clawhub_before, *skillhub_after, *clawhub_after])
 
+    dep_paths = maybe_install_dependencies(args=args, canonical=canonical, skills=relink_skills)
     maybe_link_skills(args=args, canonical=canonical, symlink_manager=symlink_manager, skills=relink_skills)
 
-    tracked_paths = [*relink_skills]
+    tracked_paths = [*relink_skills, *dep_paths]
     if lockfile_path(canonical).exists() or args.dry_run:
         tracked_paths.append(LOCKFILE_NAME)
     if clawhub_lockfile_path(canonical).exists() or args.dry_run:
