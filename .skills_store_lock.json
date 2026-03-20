@@ -19,12 +19,6 @@
       "source": "skillhub",
       "version": "1.0.0"
     },
-    "ssh-remote-sanitized": {
-      "name": "Ssh Remote Sanitized",
-      "zip_url": "https://lightmake.site/api/v1/download?slug=ssh-remote-sanitized",
-      "source": "skillhub",
-      "version": "1.0.0"
-    },
     "ssh-config-manager": {
       "name": "SSH Config Manager",
       "zip_url": "https://lightmake.site/api/v1/download?slug=ssh-config-manager",
