@@ -19,12 +19,6 @@
       "source": "skillhub",
       "version": "1.0.0"
     },
-    "ssh-config-manager": {
-      "name": "SSH Config Manager",
-      "zip_url": "https://lightmake.site/api/v1/download?slug=ssh-config-manager",
-      "source": "skillhub",
-      "version": "1.0.0"
-    },
     "mcp-ssh-manager": {
       "name": "MCP SSH Manager",
       "zip_url": "https://lightmake.site/api/v1/download?slug=mcp-ssh-manager",
