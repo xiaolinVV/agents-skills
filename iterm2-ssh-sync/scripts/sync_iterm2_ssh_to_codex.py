@@ -13,8 +13,20 @@ from pathlib import Path
 from typing import Any
 
 DEFAULT_PLIST = Path('~/Library/Preferences/com.googlecode.iterm2.plist').expanduser()
-DEFAULT_TARGET = Path('~/.codex/ssh-config.toml').expanduser()
+CANONICAL_TARGET = Path('~/.config/mcp-ssh-manager/ssh-config.toml').expanduser()
+LEGACY_TARGET = Path('~/.codex/ssh-config.toml').expanduser()
 DEFAULT_STATE = Path('~/.codex/iterm2-ssh-sync-state.json').expanduser()
+
+
+def default_target_path() -> Path:
+    if CANONICAL_TARGET.exists():
+        return CANONICAL_TARGET
+    if LEGACY_TARGET.exists():
+        return LEGACY_TARGET
+    return CANONICAL_TARGET
+
+
+DEFAULT_TARGET = default_target_path()
 
 SSH_SECTION_RE = re.compile(r'^\[ssh_servers\.([^\]]+)\]\s*$')
 IP_RE = re.compile(r'^[0-9.]+$')
@@ -524,7 +536,7 @@ def cmd_sync(args: argparse.Namespace) -> int:
 
 
 def build_parser() -> argparse.ArgumentParser:
-    parser = argparse.ArgumentParser(description='Sync password-based SSH servers from iTerm2 profiles into Codex ssh-config.toml')
+    parser = argparse.ArgumentParser(description='Sync password-based SSH servers from iTerm2 profiles into the shared mcp-ssh-manager ssh-config.toml')
     subparsers = parser.add_subparsers(dest='command', required=True)
 
     scan = subparsers.add_parser('scan', help='Scan iTerm2 profiles and list importable SSH entries')
@@ -533,9 +545,9 @@ def build_parser() -> argparse.ArgumentParser:
     scan.add_argument('--show-passwords', action='store_true', help='Include passwords in scan output')
     scan.set_defaults(func=cmd_scan)
 
-    sync = subparsers.add_parser('sync', help='Incrementally sync iTerm2 SSH entries into Codex ssh-config.toml')
+    sync = subparsers.add_parser('sync', help='Incrementally sync iTerm2 SSH entries into the shared mcp-ssh-manager ssh-config.toml')
     sync.add_argument('--iterm2-plist', default=str(DEFAULT_PLIST), help='Path to com.googlecode.iterm2.plist')
-    sync.add_argument('--target', default=str(DEFAULT_TARGET), help='Target ssh-config.toml path')
+    sync.add_argument('--target', default=str(DEFAULT_TARGET), help='Target ssh-config.toml path (canonical: ~/.config/mcp-ssh-manager/ssh-config.toml; legacy fallback: ~/.codex/ssh-config.toml)')
     sync.add_argument('--state', default=str(DEFAULT_STATE), help='State file path for incremental sync')
     sync.add_argument('--alias-map', help='Optional JSON file with badge/host to alias mapping')
     sync.add_argument('--prune-missing', '--delete-missing', dest='prune_missing', action='store_true', help='Delete previously tracked aliases no longer present in iTerm2')

@@ -1,6 +1,6 @@
 ---
 name: iterm2-ssh-sync
-description: Use when users want to discover password-based SSH servers stored in iTerm2 profiles, import or sync them into `~/.codex/ssh-config.toml`, preserve aliases across repeated runs, perform dry-run previews, or do incremental updates and optional prune of stale imported entries.
+description: Use when users want to discover password-based SSH servers stored in iTerm2 profiles, import or sync them into the shared `~/.config/mcp-ssh-manager/ssh-config.toml`, preserve aliases across repeated runs, perform dry-run previews, or do incremental updates and optional prune of stale imported entries.
 ---
 
 # iTerm2 SSH Sync
@@ -14,7 +14,7 @@ It is for **password-based server connections** stored in iTerm2 `Command` field
 ## When To Use
 
 Use this skill when the user asks to:
-- sync SSH server entries from iTerm2 into `~/.codex/ssh-config.toml`
+- sync SSH server entries from iTerm2 into the shared `~/.config/mcp-ssh-manager/ssh-config.toml`
 - import newly added iTerm2 server profiles without duplicating old entries
 - update passwords, hosts, ports, users, or badge-derived descriptions incrementally from iTerm2
 - preview what would change before writing
@@ -75,7 +75,7 @@ python3 scripts/sync_iterm2_ssh_to_codex.py sync --write
 ./scripts/sync-now.sh --yes
 ```
 
-This updates `~/.codex/ssh-config.toml` and the state file. The first `sync --write` bootstraps the state file; after that, changed host/port/password values can be updated in place for the same iTerm2 profile `Guid`.
+This updates the shared `~/.config/mcp-ssh-manager/ssh-config.toml` and the state file. The first `sync --write` bootstraps the state file; after that, changed host/port/password values can be updated in place for the same iTerm2 profile `Guid`.
 
 ### 4. Prune stale imported entries
 
@@ -111,8 +111,9 @@ See `references/sync-rules.md` for the alias-map format and merge rules.
 - Quick entry: `scripts/sync-now.sh`
 - Rules: `references/sync-rules.md`
 - Default iTerm2 source: `~/Library/Preferences/com.googlecode.iterm2.plist`
-- Default Codex target: `~/.codex/ssh-config.toml`
+- Default shared target: `~/.config/mcp-ssh-manager/ssh-config.toml`
 - Default state file: `~/.codex/iterm2-ssh-sync-state.json`
+- Legacy compatibility: if the shared target does not exist but `~/.codex/ssh-config.toml` already exists, the script falls back to the legacy path until you migrate or replace it with a symlink.
 
 ## Decision Output
 

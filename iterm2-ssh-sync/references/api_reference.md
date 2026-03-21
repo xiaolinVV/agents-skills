@@ -27,7 +27,7 @@ python3 scripts/sync_iterm2_ssh_to_codex.py sync --write --prune-missing
 
 Options:
 - `--iterm2-plist PATH`: override iTerm2 plist source
-- `--target PATH`: override target `ssh-config.toml`
+- `--target PATH`: override target `ssh-config.toml` (canonical default: `~/.config/mcp-ssh-manager/ssh-config.toml`; legacy fallback: `~/.codex/ssh-config.toml`)
 - `--state PATH`: override incremental state file
 - `--alias-map PATH`: inject explicit alias mapping
 - `--prune-missing` / `--delete-missing`: remove stale tracked aliases
