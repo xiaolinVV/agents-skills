@@ -30,7 +30,7 @@ Do not use this skill for:
 - Treat iTerm2 `New Bookmarks` as the source of truth for imported password-based servers.
 - Parse iTerm2 via Python `plistlib`, not brittle shell scraping.
 - Use iTerm2 profile `Guid` as the stable sync identity.
-- Keep a sync state file at `~/.codex/iterm2-ssh-sync-state.json` so repeated runs stay incremental.
+- Keep a sync state file at the shared path `~/.config/mcp-ssh-manager/iterm2-ssh-sync-state.json` so repeated runs stay incremental.
 - Match existing Codex entries by state first. If the same iTerm2 `Guid` already exists, update that alias in place even when host or port changes. Only fall back to unique `host + user + port` adoption when state is missing.
 - Preserve existing extra fields like `default_dir` if the target alias already has them.
 - Do not guess `default_dir` from iTerm2.
@@ -112,8 +112,8 @@ See `references/sync-rules.md` for the alias-map format and merge rules.
 - Rules: `references/sync-rules.md`
 - Default iTerm2 source: `~/Library/Preferences/com.googlecode.iterm2.plist`
 - Default shared target: `~/.config/mcp-ssh-manager/ssh-config.toml`
-- Default state file: `~/.codex/iterm2-ssh-sync-state.json`
-- Legacy compatibility: if the shared target does not exist but `~/.codex/ssh-config.toml` already exists, the script falls back to the legacy path until you migrate or replace it with a symlink.
+- Default shared state file: `~/.config/mcp-ssh-manager/iterm2-ssh-sync-state.json`
+- Legacy compatibility: if the shared target/state do not exist but legacy `~/.codex/ssh-config.toml` or `~/.codex/iterm2-ssh-sync-state.json` already exist, the script falls back to the legacy path until you migrate or replace them with symlinks.
 
 ## Decision Output
 

@@ -4,7 +4,8 @@
 
 - Read iTerm2 profiles from `~/Library/Preferences/com.googlecode.iterm2.plist`
 - Target config should use the shared canonical path `~/.config/mcp-ssh-manager/ssh-config.toml`
-- Preserve legacy `~/.codex/ssh-config.toml` only as a compatibility fallback during migration
+- Incremental sync state should also use the shared canonical path `~/.config/mcp-ssh-manager/iterm2-ssh-sync-state.json`
+- Preserve legacy `~/.codex/ssh-config.toml` and `~/.codex/iterm2-ssh-sync-state.json` only as compatibility fallbacks during migration
 - Only import commands that look like password-based SSH launches through `sshpass`
 - Ignore Git host aliases from `~/.ssh/config`
 
