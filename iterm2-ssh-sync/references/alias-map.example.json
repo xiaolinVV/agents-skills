@@ -1,0 +1,11 @@
+{
+  "badge": {
+    "FastGPT@10.30": "fastgpt_10_30",
+    "RAGFlow@10.31": "ragflow_10_31",
+    "Dify@10.32": "dify_10_32",
+    "爱收鞋": "aishouxie"
+  },
+  "host": {
+    "192.168.10.30": "fastgpt_10_30"
+  }
+}
