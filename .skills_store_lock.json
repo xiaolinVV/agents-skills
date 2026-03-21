@@ -24,6 +24,12 @@
       "zip_url": "https://lightmake.site/api/v1/download?slug=mcp-ssh-manager",
       "source": "skillhub",
       "version": "0.1.1"
+    },
+    "humanizer-zh": {
+      "name": "humanizer-zh",
+      "zip_url": "https://lightmake.site/api/v1/download?slug=humanizer-zh",
+      "source": "skillhub",
+      "version": "1.0.0"
     }
   }
 }
