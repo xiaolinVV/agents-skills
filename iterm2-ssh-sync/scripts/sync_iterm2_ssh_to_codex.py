@@ -13,20 +13,24 @@ from pathlib import Path
 from typing import Any
 
 DEFAULT_PLIST = Path('~/Library/Preferences/com.googlecode.iterm2.plist').expanduser()
-CANONICAL_TARGET = Path('~/.config/mcp-ssh-manager/ssh-config.toml').expanduser()
-LEGACY_TARGET = Path('~/.codex/ssh-config.toml').expanduser()
-DEFAULT_STATE = Path('~/.codex/iterm2-ssh-sync-state.json').expanduser()
+CANONICAL_ROOT = Path('~/.config/mcp-ssh-manager').expanduser()
+LEGACY_ROOT = Path('~/.codex').expanduser()
+CANONICAL_TARGET = CANONICAL_ROOT / 'ssh-config.toml'
+LEGACY_TARGET = LEGACY_ROOT / 'ssh-config.toml'
+CANONICAL_STATE = CANONICAL_ROOT / 'iterm2-ssh-sync-state.json'
+LEGACY_STATE = LEGACY_ROOT / 'iterm2-ssh-sync-state.json'
 
 
-def default_target_path() -> Path:
-    if CANONICAL_TARGET.exists():
-        return CANONICAL_TARGET
-    if LEGACY_TARGET.exists():
-        return LEGACY_TARGET
-    return CANONICAL_TARGET
+def resolve_default_path(canonical: Path, legacy: Path) -> Path:
+    if canonical.exists():
+        return canonical
+    if legacy.exists():
+        return legacy
+    return canonical
 
 
-DEFAULT_TARGET = default_target_path()
+DEFAULT_TARGET = resolve_default_path(CANONICAL_TARGET, LEGACY_TARGET)
+DEFAULT_STATE = resolve_default_path(CANONICAL_STATE, LEGACY_STATE)
 
 SSH_SECTION_RE = re.compile(r'^\[ssh_servers\.([^\]]+)\]\s*$')
 IP_RE = re.compile(r'^[0-9.]+$')
@@ -548,7 +552,7 @@ def build_parser() -> argparse.ArgumentParser:
     sync = subparsers.add_parser('sync', help='Incrementally sync iTerm2 SSH entries into the shared mcp-ssh-manager ssh-config.toml')
     sync.add_argument('--iterm2-plist', default=str(DEFAULT_PLIST), help='Path to com.googlecode.iterm2.plist')
     sync.add_argument('--target', default=str(DEFAULT_TARGET), help='Target ssh-config.toml path (canonical: ~/.config/mcp-ssh-manager/ssh-config.toml; legacy fallback: ~/.codex/ssh-config.toml)')
-    sync.add_argument('--state', default=str(DEFAULT_STATE), help='State file path for incremental sync')
+    sync.add_argument('--state', default=str(DEFAULT_STATE), help='State file path for incremental sync (canonical: ~/.config/mcp-ssh-manager/iterm2-ssh-sync-state.json; legacy fallback: ~/.codex/iterm2-ssh-sync-state.json)')
     sync.add_argument('--alias-map', help='Optional JSON file with badge/host to alias mapping')
     sync.add_argument('--prune-missing', '--delete-missing', dest='prune_missing', action='store_true', help='Delete previously tracked aliases no longer present in iTerm2')
     sync.add_argument('--write', action='store_true', help='Persist changes to target and state files')
