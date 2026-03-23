@@ -23,6 +23,9 @@ Unless the user overrides it, apply these defaults:
 - If raw effort falls outside that band, clamp it to the **nearest tolerance boundary** instead of inventing fake scope
 - Deliver **one `.xlsx` workbook directly**, not a markdown draft first
 - Keep the workbook **client-safe**: no pricing rationale, no tolerance notes, no source-file analysis inside the workbook
+- Create a default project workspace under `~/文档/功能清单报价`, falling back to `~/Documents/功能清单报价` and then `~/功能清单报价`
+- Copy original source files into the workspace `source/` directory, but **never** move or delete the user’s originals
+- Enable the standard client-facing `特殊说明` block by default, unless the user explicitly disables or replaces it
 
 ## Delivery mode
 
@@ -44,9 +47,37 @@ When the runtime context clearly indicates the request is running inside OpenCla
 When the runtime is not OpenClaw Feishu:
 
 - Return the final generated workbook path
+- Return the project workspace directory so the user can find archived source files
 - Prefer the compact delivery format in `references/feishu-delivery-template.md`
 
 ## Workflow
+
+### 0. Prepare the project workspace
+
+Always prepare a stable workspace before extraction or generation.
+
+Use this command:
+
+```bash
+python3 scripts/prepare_quote_workspace.py --project-name "项目名称" file1.pdf file2.docx
+```
+
+Read the JSON manifest from stdout and use these paths consistently:
+
+- `source_dir`: archived original materials
+- `normalized_dir`: normalized intermediate files
+- `output_dir`: final delivery directory
+- `output_xlsx`: final workbook path
+
+Workspace rules:
+
+- Default root resolution order:
+  1. `~/文档/功能清单报价`
+  2. `~/Documents/功能清单报价`
+  3. `~/功能清单报价`
+- Each run creates one timestamped project directory
+- Original materials are copied into `source/`
+- Never modify or delete the originals in place
 
 ### 1. Normalize the source files
 
@@ -62,7 +93,7 @@ First decide whether the source is already machine-readable or needs conversion.
 Use this command when legacy files are present:
 
 ```bash
-python3 scripts/normalize_inputs.py --output-dir workspace/normalized file1.doc file2.ppt file3.xls
+python3 scripts/normalize_inputs.py --output-dir "$NORMALIZED_DIR" file1.doc file2.ppt file3.xls
 ```
 
 Read the JSON manifest from stdout and continue with the normalized outputs.
@@ -148,13 +179,17 @@ Read `references/output-contract.md` when preparing the JSON payload for the bun
 Use this command:
 
 ```bash
-python3 scripts/build_quote_workbook.py quote-project.json output.xlsx
+python3 scripts/build_quote_workbook.py quote-project.json "$OUTPUT_XLSX"
 ```
 
 The JSON payload must contain the project-level fields plus either:
 
 - `items` for template mode, or
 - `base_columns` + `base_rows` + `items` for reuse mode
+- When using the default skill behavior, set:
+  - `"special_notes_enabled": true`
+  - optionally `"special_notes_merge": "append"` or `"replace"`
+  - optionally `"special_notes": ["客户特有说明"]`
 
 The workbook generator writes one client-facing sheet:
 
@@ -165,7 +200,8 @@ The workbook layout is fixed:
 - Row 1: merged title, formatted as `{项目名称}功能清单报价表`
 - Row 2: table headers
 - Row 3+: detail rows
-- Bottom: summary row
+- Detail rows are followed by one summary row
+- If `special_notes_enabled=true`, append a `特殊说明` block below the summary row on the same sheet
 - Long-text cells such as `功能说明` and `备注` should keep `wrapText` enabled; the bundled generator estimates row height from the visible text and column width so multiline content is not collapsed by a fixed short row height
 - In template mode, keep `功能说明` readable as a client-facing narrative column; prefer concise but complete wording rather than packing multiple unrelated features into one cell
 
@@ -212,6 +248,20 @@ Always append one bottom summary row containing:
 - total days
 - total amount
 
+### Special notes block
+
+By default, append these client-facing notes below the summary row:
+
+1. `仅为软件功能开发费用。`
+2. `默认包含自项目验收之日起一年的维护期。`
+3. `服务器及第三方服务相关费用由客户自行支付。`
+
+Allow the caller to:
+
+- disable the block entirely
+- append custom notes
+- replace the default notes with custom notes
+
 ### Workbook boundaries
 
 Never include these in the workbook:
@@ -220,6 +270,8 @@ Never include these in the workbook:
 - 报价摘要
 - 报价说明 sheet
 - 目标报价、容差、调整原因、来源文件、关键假设等内部解释信息
+
+The only allowed explanatory content inside the workbook is the client-facing `特殊说明` block at the bottom of the main sheet.
 
 ## Sanity checks
 
@@ -231,6 +283,7 @@ Before delivering the workbook, verify these points:
 - The bottom summary equals the sum of all quoted rows
 - The workbook title uses `{项目名称}功能清单报价表` or `功能清单报价表`
 - The workbook contains only one sheet and no internal explanation content
+- If special notes are enabled, they appear below the summary row and do not alter pricing formulas
 
 ## Resources
 
@@ -247,6 +300,9 @@ Read this before sending the final result back to the user. It defines the fixed
 
 ### scripts/normalize_inputs.py
 Use this to normalize legacy Office or OpenDocument inputs into modern formats before extraction.
+
+### scripts/prepare_quote_workspace.py
+Use this first to create a stable project workspace, archive original materials, and get the final output path.
 
 ### scripts/build_quote_workbook.py
 Use this to generate the final quote workbook deterministically from structured JSON.

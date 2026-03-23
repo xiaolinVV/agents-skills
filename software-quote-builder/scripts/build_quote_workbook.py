@@ -41,6 +41,11 @@ STYLE_ALT_CURRENCY = 16
 DEFAULT_DATA_ROW_HEIGHT = 24
 ROW_LINE_HEIGHT = 16
 MAX_DATA_ROW_HEIGHT = 180
+DEFAULT_SPECIAL_NOTES = [
+    "仅为软件功能开发费用。",
+    "默认包含自项目验收之日起一年的维护期。",
+    "服务器及第三方服务相关费用由客户自行支付。",
+]
 
 
 @dataclass
@@ -222,6 +227,45 @@ def project_title(payload: Dict[str, object]) -> str:
     return f"{name}功能清单报价表" if name else "功能清单报价表"
 
 
+def payload_bool(payload: Dict[str, object], key: str, default: bool = False) -> bool:
+    value = payload.get(key, default)
+    if isinstance(value, bool):
+        return value
+    if value is None:
+        return default
+    if isinstance(value, str):
+        return value.strip().lower() in {"1", "true", "yes", "on"}
+    return bool(value)
+
+
+def normalized_notes_list(raw_notes: object) -> List[str]:
+    if raw_notes is None:
+        return []
+    if isinstance(raw_notes, list):
+        values = raw_notes
+    else:
+        values = [raw_notes]
+
+    notes: List[str] = []
+    for value in values:
+        text = str(value).strip()
+        if text and text not in notes:
+            notes.append(text)
+    return notes
+
+
+def resolved_special_notes(payload: Dict[str, object]) -> List[str]:
+    if not payload_bool(payload, "special_notes_enabled", default=False):
+        return []
+
+    merge_mode = str(payload.get("special_notes_merge") or "append").strip().lower()
+    custom_notes = normalized_notes_list(payload.get("special_notes"))
+    if merge_mode == "replace" and custom_notes:
+        return custom_notes
+
+    return normalized_notes_list(DEFAULT_SPECIAL_NOTES + custom_notes)
+
+
 def display_width(text: str) -> int:
     width = 0
     for ch in text:
@@ -300,6 +344,32 @@ def make_row_xml(row_num: int, cells: Sequence[str], height: int | None = None) 
     return f'<row {" ".join(attrs)}>{"".join(cells)}</row>'
 
 
+def append_special_notes_block(
+    rows: List[str],
+    merges: List[str],
+    widths: Sequence[int],
+    last_col: str,
+    start_row: int,
+    notes: Sequence[str],
+) -> int:
+    if not notes:
+        return start_row
+
+    merged_width = max(sum(widths), 20)
+    section_row = start_row
+    merges.append(f"A{section_row}:{last_col}{section_row}")
+    rows.append(make_row_xml(section_row, [xml_text_cell(f"A{section_row}", "特殊说明", STYLE_SECTION)], height=24))
+
+    for offset, note in enumerate(notes, start=1):
+        row_num = section_row + offset
+        note_text = f"{offset}. {note}"
+        merges.append(f"A{row_num}:{last_col}{row_num}")
+        note_height = row_height_for_cells([(note_text, merged_width)])
+        rows.append(make_row_xml(row_num, [xml_text_cell(f"A{row_num}", note_text, STYLE_NOTE)], height=note_height))
+
+    return section_row + len(notes) + 1
+
+
 def quote_sheet_template(payload: Dict[str, object], items: List[QuoteItem], rate: float) -> SheetSpec:
     headers = [
         "序号",
@@ -369,6 +439,14 @@ def quote_sheet_template(payload: Dict[str, object], items: List[QuoteItem], rat
         xml_text_cell(f"I{sum_row}", "", STYLE_SUMMARY_LABEL),
     ]
     rows.append(make_row_xml(sum_row, summary_cells, height=24))
+    append_special_notes_block(
+        rows=rows,
+        merges=merges,
+        widths=widths,
+        last_col=last_col,
+        start_row=sum_row + 1,
+        notes=resolved_special_notes(payload),
+    )
 
     xml = worksheet_xml(
         rows,
@@ -468,6 +546,14 @@ def quote_sheet_reuse(payload: Dict[str, object], items: List[QuoteItem], rate: 
     summary_cells.append(xml_text_cell(f"{rate_col}{sum_row}", "", STYLE_SUMMARY_LABEL))
     summary_cells.append(xml_formula_cell(f"{total_col}{sum_row}", amount_formula, amount_value, STYLE_SUMMARY_CURRENCY))
     rows.append(make_row_xml(sum_row, summary_cells, height=24))
+    append_special_notes_block(
+        rows=rows,
+        merges=merges,
+        widths=widths,
+        last_col=last_col,
+        start_row=sum_row + 1,
+        notes=resolved_special_notes(payload),
+    )
 
     xml = worksheet_xml(
         rows,

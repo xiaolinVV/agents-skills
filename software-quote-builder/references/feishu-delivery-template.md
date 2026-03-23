@@ -96,7 +96,12 @@ When the runtime is not OpenClaw Feishu, prefer this compact structure:
 - 最终报价：{final_amount_text}
 - 总工时：{final_days_text}
 - 单价：{day_rate_text}
+- 项目目录：{project_dir}
 - 文件路径：{local_output_path}
 ```
 
 Use the longer success/failure templates only for the Feishu channel.
+
+### Non-Feishu placeholder rules
+
+- `{project_dir}`: the workspace directory containing `source/`, `normalized/`, and `output/`
