@@ -26,6 +26,9 @@ class AgentConfig:
     detect_cwd_paths: Tuple[Path, ...] = ()
 
 
+POLICY_EXCLUDED_SKILLS = {"superpowers"}
+
+
 def _expand(path: str) -> Path:
     return Path(os.path.expandvars(os.path.expanduser(path))).resolve()
 
@@ -71,9 +74,9 @@ def build_agents(home: Path, cwd: Path) -> Dict[str, AgentConfig]:
         ),
         "openclaw-workspace": cfg(
             "openclaw-workspace",
-            "OpenClaw Workspace",
-            "~/.openclaw/workspace/skills",
-            ["~/.openclaw/workspace", "~/.openclaw/openclaw.json"],
+            "OpenClaw",
+            "~/.openclaw/skills",
+            ["~/.openclaw", "~/.openclaw/openclaw.json"],
         ),
         "clawdbot": cfg(
             "clawdbot",
@@ -286,6 +289,14 @@ def filter_skills_by_prefix(
     return filtered
 
 
+def apply_local_policy(skills: Dict[str, Path]) -> Dict[str, Path]:
+    return {
+        name: path
+        for name, path in skills.items()
+        if name not in POLICY_EXCLUDED_SKILLS
+    }
+
+
 def split_list(values: Optional[List[str]]) -> List[str]:
     if not values:
         return []
@@ -377,6 +388,7 @@ def run_status(
     include_prefixes = split_list(args.prefix)
     exclude_prefixes = split_list(args.exclude_prefix)
     skills = filter_skills_by_prefix(skills, include_prefixes, exclude_prefixes)
+    skills = apply_local_policy(skills)
     if args.skill:
         requested = split_list(args.skill)
         skills = {k: v for k, v in skills.items() if k in requested}
@@ -477,13 +489,32 @@ def run_link(
     include_prefixes = split_list(args.prefix)
     exclude_prefixes = split_list(args.exclude_prefix)
     skills = filter_skills_by_prefix(skills, include_prefixes, exclude_prefixes)
+    skills = apply_local_policy(skills)
 
     if args.all_skills:
         selected_skills = list(skills.keys())
     else:
         selected_skills = split_list(args.skill)
 
+    policy_excluded = [s for s in selected_skills if s in POLICY_EXCLUDED_SKILLS]
+    selected_skills = [s for s in selected_skills if s not in POLICY_EXCLUDED_SKILLS]
+
     if not selected_skills:
+        if policy_excluded:
+            payload = {
+                "canonical": str(canonical_dir),
+                "policyExcluded": sorted(policy_excluded),
+                "includePrefixes": include_prefixes,
+                "excludePrefixes": exclude_prefixes,
+            }
+            if mode == "json" or mode == "jsonl":
+                print(json.dumps(payload, ensure_ascii=False))
+            else:
+                print(
+                    "policy: skipped skills managed separately: "
+                    + ", ".join(sorted(policy_excluded))
+                )
+            return 0
         emit_error(
             "No skills selected. Use --skill <name> or --all-skills.",
             mode,
@@ -513,6 +544,7 @@ def run_link(
         "canonical": str(canonical_dir),
         "includePrefixes": include_prefixes,
         "excludePrefixes": exclude_prefixes,
+        "policyExcluded": sorted(policy_excluded),
         "dryRun": bool(args.dry_run),
         "force": bool(force),
         "agents": [],
@@ -567,6 +599,11 @@ def run_link(
             )
         else:
             print(f"\n[{format_agent(cfg)}]")
+            if policy_excluded:
+                print(
+                    "policy: skipped skills managed separately: "
+                    + ", ".join(sorted(policy_excluded))
+                )
             for entry in agent_results:
                 prefix = "OK" if entry["ok"] else "SKIP"
                 print(

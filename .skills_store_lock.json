@@ -30,6 +30,12 @@
       "zip_url": "https://lightmake.site/api/v1/download?slug=humanizer-zh",
       "source": "skillhub",
       "version": "1.0.0"
+    },
+    "superpowers": {
+      "name": "Superpowers Dev Workflow",
+      "zip_url": "https://lightmake.site/api/v1/download?slug=superpowers",
+      "source": "skillhub",
+      "version": "1.0.0"
     }
   }
 }

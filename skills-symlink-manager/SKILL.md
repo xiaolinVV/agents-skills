@@ -9,7 +9,16 @@ description: Manage canonical skills in ~/.agents/skills and create/check/repair
 
 Keep `~/.agents/skills` as the single source of truth and symlink into detected agent skill directories using `scripts/skills_symlink_manager.py`.
 
-Current coverage includes major local agents plus **OpenClaw Workspace** (`~/.openclaw/workspace/skills`).
+Current coverage includes major local agents plus **OpenClaw** global skills (`~/.openclaw/skills`). The agent key remains `openclaw-workspace` for backward compatibility, but the target directory is the OpenClaw global skills dir — not `~/.openclaw/workspace/skills`.
+
+## Local policy overrides
+
+- **OpenClaw target**: use `~/.openclaw/skills` for shared OpenClaw skills. Do not use `~/.openclaw/workspace/skills` for shared installs.
+- **`superpowers` special case**: do **not** bulk-link `superpowers` into arbitrary agent skill dirs. It is managed separately per platform:
+  - OpenClaw uses the OpenClaw-specific copy under `~/.openclaw/skills/superpowers`
+  - Codex uses the upstream repo via `~/.agents/skills/superpowers -> ~/.codex/superpowers/skills`
+  - Claude Code / OpenCode use their native plugin installs
+- The script enforces this by skipping `superpowers` during link/fix operations.
 
 ## Commands (A/B/C/D/E)
 
@@ -40,7 +49,7 @@ Current coverage includes major local agents plus **OpenClaw Workspace** (`~/.op
 ## Examples
 
 ```bash
-# C: status for all detected agents (now includes OpenClaw Workspace when present)
+# C: status for all detected agents (now includes OpenClaw global skills when present)
 python3 scripts/skills_symlink_manager.py status --verbose
 
 # A: link one skill (dry run)
@@ -52,7 +61,7 @@ python3 scripts/skills_symlink_manager.py link --all-skills
 # D: force fix a single skill (dry run)
 python3 scripts/skills_symlink_manager.py fix --skill my-skill --dry-run
 
-# Limit to specific agents
+# Limit to specific agents (OpenClaw key stays `openclaw-workspace` for compatibility)
 python3 scripts/skills_symlink_manager.py --agents claude-code,codex,openclaw-workspace status
 
 # JSON output + prefix filter
