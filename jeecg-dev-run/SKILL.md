@@ -1,6 +1,6 @@
 ---
 name: jeecg-dev-run
-description: Run and troubleshoot the local Jeecg-Boot development stack for any workspace that follows the standard backend plus Vue admin layout (`jeecg-boot/` and `ant-design-vue-jeecg/`). Use when explicitly invoked as `$jeecg-dev-run` to start, stop, restart, inspect, or debug backend/frontend services in a Jeecg-based business project.
+description: Run and troubleshoot the local Jeecg-Boot development stack for any workspace that follows the standard backend plus Vue admin layout (`jeecg-boot/` and `ant-design-vue-jeecg/`). Use this as the generic fallback runner when the current workspace does not provide a more specific repo-local local-run skill, or when explicitly invoked as `$jeecg-dev-run`.
 ---
 
 # Jeecg Dev Run
@@ -10,17 +10,21 @@ Use this skill as the generic local runner for Jeecg-based business workspaces. 
 ## Workflow
 
 1. Read `references/local-dev-runbook.md` before starting or debugging services.
-2. Invoke this skill explicitly as `$jeecg-dev-run` when the workspace needs the generic Jeecg runner.
+2. Before using this skill, check whether the current workspace provides a more specific repo-local local-run skill.
+   - If a repo-local runner exists, that runner takes precedence.
+   - If no repo-local runner exists and the workspace matches the standard Jeecg layout, use this skill.
+   - If the user explicitly invokes `$jeecg-dev-run`, always use this skill.
 3. Detect the workspace from the current directory, a backend subdirectory, or a frontend subdirectory before touching any service.
-4. Default to the interactive session helpers unless the user explicitly asks for `nohup`, `后台`, `常驻`, or another detached background flow.
-5. Use this startup order unless the user asks otherwise:
+4. Respect `JEECG_DEV_START_DIR` as an explicit workspace override when the caller needs to pin a specific Jeecg workspace.
+5. Default to the interactive session helpers unless the user explicitly asks for `nohup`, `后台`, `常驻`, or another detached background flow.
+6. Use this startup order unless the user asks otherwise:
    - Backend
    - Frontend
-6. When a target port is busy, choose the next free local port and persist the selected ports to the mode-specific state file before launching dependents.
-7. Wire the frontend from the selected backend URL instead of assuming `8080`.
-8. After each meaningful start, stop, or restart, run `service-status.sh` or `session-status.sh` before reporting success.
-9. If something fails, inspect the active process output first, then compare the symptom against `references/local-dev-runbook.md`.
-10. Use `inspect-local-stack.sh` when the user wants a neutral view of current state files, port listeners, or action hints.
+7. When a target port is busy, choose the next free local port and persist the selected ports to the mode-specific state file before launching dependents.
+8. Wire the frontend from the selected backend URL instead of assuming `8080`.
+9. After each meaningful start, stop, or restart, run `service-status.sh` or `session-status.sh` before reporting success.
+10. If something fails, inspect the active process output first, then compare the symptom against `references/local-dev-runbook.md`.
+11. Use `inspect-local-stack.sh` when the user wants a neutral view of current state files, port listeners, or action hints.
 
 ## Failure Policy
 
@@ -51,6 +55,7 @@ Use this skill as the generic local runner for Jeecg-based business workspaces. 
 ## Repo Structure Rules
 
 - Treat this skill as the generic Jeecg runner, not as a replacement for repo-specific local-run skills.
+- Repo-local runners win over this generic skill by default; this skill is the fallback for standard Jeecg workspaces that do not provide their own local-run skill.
 - Resolve the workspace from the current directory or from `JEECG_DEV_START_DIR` when the caller needs an explicit path override.
 - Support these layouts:
   - Standard workspace root containing `jeecg-boot/` and `ant-design-vue-jeecg/`
