@@ -8,3 +8,5 @@ __pycache__/
 # Node / JS dependencies
 node_modules/
 npm-debug.log*
+
+.worktrees/
