@@ -23,9 +23,10 @@ Unless the user overrides it, apply these defaults:
 - If raw effort falls outside that band, clamp it to the **nearest tolerance boundary** instead of inventing fake scope
 - Deliver **one `.xlsx` workbook directly**, not a markdown draft first
 - Keep the workbook **client-safe**: no pricing rationale, no tolerance notes, no source-file analysis inside the workbook
-- Create a default project workspace under `~/文档/功能清单报价`, falling back to `~/Documents/功能清单报价` and then `~/功能清单报价`
+- Create a default project workspace under `~/文稿/功能清单报价`, falling back to `~/文档/功能清单报价`, then `~/Documents/功能清单报价`, and finally `~/功能清单报价`
 - Copy original source files into the workspace `source/` directory, but **never** move or delete the user’s originals
 - Enable the standard client-facing `特殊说明` block by default, unless the user explicitly disables or replaces it
+- When the user wants to revise a previously generated quote, find historical workspaces first and continue from the matched latest version instead of rebuilding from scratch
 
 ## Delivery mode
 
@@ -52,7 +53,42 @@ When the runtime is not OpenClaw Feishu:
 
 ## Workflow
 
-### 0. Prepare the project workspace
+### 0. Find historical workspaces when the request is a revision
+
+If the user is asking to **修改 / 微调 / 整改 / 续改** a quote that was generated earlier:
+
+1. Search the historical workspace root first:
+
+```bash
+python3 scripts/find_quote_workspace.py "报价表名称或项目名"
+```
+
+The finder searches across all compatible default roots that exist on the machine, so legacy workspaces under `~/文档` or `~/Documents` still remain discoverable even after `~/文稿` support is added.
+
+2. Show the top candidates with:
+   - `project_name`
+   - `timestamp`
+   - `project_dir`
+   - `resume_capability`
+3. **Ask the user to confirm the candidate** before modifying anything, even if one candidate scores highest
+4. After confirmation, create a **new timestamped revision workspace** from the matched historical project:
+
+```bash
+python3 scripts/prepare_quote_workspace.py \
+  --project-name "项目名称" \
+  --base-project-dir "/path/to/历史项目目录"
+```
+
+Historical revision rules:
+
+- Never overwrite the old project directory in place
+- Prefer copying the historical `quote-project.json` into the new revision workspace
+- If the historical project has no `quote-project.json`, recover a new one from `output/*.xlsx`
+- If the workbook also cannot be reused, fall back to `source/` materials and mark the new workspace as source-based regeneration
+- If `--root-dir` is not provided, place the new revision workspace under the **same root** as the matched historical project
+- The new workspace writes `workspace-manifest.json` so future sessions can find it again without relying on chat context
+
+### 1. Prepare the project workspace
 
 Always prepare a stable workspace before extraction or generation.
 
@@ -68,18 +104,22 @@ Read the JSON manifest from stdout and use these paths consistently:
 - `normalized_dir`: normalized intermediate files
 - `output_dir`: final delivery directory
 - `output_xlsx`: final workbook path
+- `quote_json`: structured base payload to continue editing from
+- `workspace_manifest`: persisted project metadata for future lookup
 
 Workspace rules:
 
 - Default root resolution order:
-  1. `~/文档/功能清单报价`
-  2. `~/Documents/功能清单报价`
-  3. `~/功能清单报价`
+  1. `~/文稿/功能清单报价`
+  2. `~/文档/功能清单报价`
+  3. `~/Documents/功能清单报价`
+  4. `~/功能清单报价`
 - Each run creates one timestamped project directory
 - Original materials are copied into `source/`
 - Never modify or delete the originals in place
+- Historical revisions create a **new** timestamped directory and keep the old one untouched
 
-### 1. Normalize the source files
+### 2. Normalize the source files
 
 First decide whether the source is already machine-readable or needs conversion.
 
@@ -98,7 +138,7 @@ python3 scripts/normalize_inputs.py --output-dir "$NORMALIZED_DIR" file1.doc fil
 
 Read the JSON manifest from stdout and continue with the normalized outputs.
 
-### 2. Decide whether to reuse the original table structure
+### 3. Decide whether to reuse the original table structure
 
 Use this decision rule:
 
@@ -122,7 +162,7 @@ In reuse mode:
 
 Choose **template mode** when the original materials do not already provide a clean feature table.
 
-### 3. Extract the feature list
+### 4. Extract the feature list
 
 Reduce every source into the same logical model before quoting:
 
@@ -146,7 +186,7 @@ When multiple files overlap:
 - keep the clearest wording
 - keep internal conflicts or assumptions in the **chat explanation**, not in the workbook
 
-### 4. Estimate person-days
+### 5. Estimate person-days
 
 Read `references/estimation-rules.md` before estimating.
 
@@ -159,7 +199,7 @@ Rules:
 
 If the materials are clearly incomplete, still produce the quote but record the uncertainty in the **chat explanation** instead of pretending certainty.
 
-### 5. Align to the target price band
+### 6. Align to the target price band
 
 After raw effort is estimated:
 
@@ -172,7 +212,7 @@ After raw effort is estimated:
 
 Do **not** silently add imaginary scope just to hit a number.
 
-### 6. Generate the workbook
+### 7. Generate the workbook
 
 Read `references/output-contract.md` when preparing the JSON payload for the bundled workbook generator.
 
@@ -302,7 +342,10 @@ Read this before sending the final result back to the user. It defines the fixed
 Use this to normalize legacy Office or OpenDocument inputs into modern formats before extraction.
 
 ### scripts/prepare_quote_workspace.py
-Use this first to create a stable project workspace, archive original materials, and get the final output path.
+Use this first to create a stable project workspace, archive original materials, or create a new revision workspace from a historical quote.
+
+### scripts/find_quote_workspace.py
+Use this when the user refers to a previously generated quote by name and you need to locate the best historical candidates before continuing.
 
 ### scripts/build_quote_workbook.py
 Use this to generate the final quote workbook deterministically from structured JSON.
