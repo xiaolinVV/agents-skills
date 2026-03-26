@@ -1,0 +1,31 @@
+XHS LIKE AUDIT - 最短口诀
+
+1. 新开一批
+python3 scripts/start_batch.py --roster-file /path/to/roster.txt --batch-root /tmp
+或
+python3 scripts/start_batch.py --roster-file /path/to/roster.txt --zip-file /path/to/screenshots.zip --batch-root /tmp
+只看名单风险
+python3 scripts/lint_roster.py --input-file /path/to/roster.txt
+
+2. 判图顺序
+先看爱心 -> 再匹配名字 -> 拿不准不算
+
+3. 写入单图结果
+python3 scripts/update_counts.py --state-file /tmp/xhs-batch/state.json --matches-file /tmp/image-001.json
+
+4. 名单顺序版
+python3 scripts/render_report.py --state-file /tmp/xhs-batch/state.json --preset roster
+
+5. 提交版
+python3 scripts/render_report.py --state-file /tmp/xhs-batch/state.json --preset submit
+
+6. 合并多批次
+python3 scripts/merge_batches.py --state-files /tmp/b1/state.json /tmp/b2/state.json --output-file /tmp/merged/total.json --session-name total
+
+7. 导出整套交付包
+python3 scripts/export_delivery_pack.py --state-file /tmp/merged/total.json --output-dir /tmp/merged/delivery --name total --only-nonzero-submit
+
+8. 记住
+名单可以变，逻辑不变；不同名单版本不要直接合并；宁可少算，不要乱算。
+zip 批次看 images-manifest.json；20+ 张图按 5-10 张分片；并行判图，串行写 state。
+引号组才是硬合并；roster-lint 只报警，不自动合并；先看爱心，再做唯一匹配。
