@@ -80,6 +80,9 @@ The structured embedded result must include at least:
 - `clarification_scope` when applicable
 - `clarification_prompt` when applicable
 - `resume_step` when applicable
+- `formal_story_status`
+- `qa_metrics`
+- `delivery_summary`
 
 ## Story Selection
 
@@ -260,6 +263,8 @@ If `cycle` would exceed `retry_limit`, stop with `blocked-execution` and report 
 
 ## Finalize
 
+Apply `references/report-contract.md`.
+
 Only the pipeline controller may execute the final `review -> done` transition.
 
 Before finalizing, verify:
@@ -278,6 +283,7 @@ Then:
 3. write a timestamped `final-summary-*.md` under `evidence_root` in `document_output_language`
 4. write a timestamped lightweight `pipeline-run-*.yaml` ledger under `evidence_root`
 5. perform automatic git sync using `references/git-sync.md`
+6. emit the story final report block to terminal using the report contract
 
 The ledger is audit evidence only. It must not become a second source of truth for resume behavior.
 

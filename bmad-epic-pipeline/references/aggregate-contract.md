@@ -24,7 +24,18 @@ Minimum required shape:
   "clarification_scope": null,
   "clarification_prompt": null,
   "resume_step": null,
-  "formal_story_status": "done"
+  "formal_story_status": "done",
+  "qa_metrics": {
+    "tests_total": 31,
+    "tests_passed": 31,
+    "tests_failed": 0,
+    "qa_mode": "executable",
+    "qa_skipped": false,
+    "skip_reason": null
+  },
+  "delivery_summary": [
+    "完成 profile service 与状态持久化"
+  ]
 }
 ```
 
@@ -70,6 +81,11 @@ Minimum fields:
 - `executed_stories`
 - `failed_story` (nullable)
 - `epic_status_updated_to_done`
+- `qa_totals`
+  - `tests_total`
+  - `tests_passed`
+  - `tests_failed`
+  - `stories_skipped_qa`
 
 Each executed story entry should include:
 - `story_id`
@@ -78,6 +94,8 @@ Each executed story entry should include:
 - `summary_path`
 - `git_sync`
 - `formal_story_status`
+- `qa_metrics`
+- `delivery_summary`
 
 ## Controller Rules
 

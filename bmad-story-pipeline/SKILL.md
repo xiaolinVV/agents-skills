@@ -15,6 +15,7 @@ Orchestrate one BMAD story without inventing a second development methodology. T
 4. Read `./references/worker-contract.md` before spawning any worker or interpreting worker results.
 5. Read `./references/git-sync.md` before any automatic commit / push behavior.
 6. Read `./references/progress-contract.md` before emitting progress or retry checkpoints.
+7. Read `./references/report-contract.md` before generating final delivery reports.
 
 ## When to Use
 
@@ -33,5 +34,6 @@ Do **not** use it for direct Epic batch execution; that belongs to `bmad-epic-pi
 - Prefer a fresh worker for every step. If worker tools are unavailable, emulate fresh context by reloading only the minimum required files.
 - Human-readable evidence Markdown must follow `document_output_language`. Keep machine-friendly ledger field names stable.
 - Emit standardized progress and retry checkpoints using `references/progress-contract.md`.
+- Generate a structured final delivery report using `references/report-contract.md`.
 - On ambiguity, ask. Do not guess between equally plausible repo, framework, test, or git-sync targets.
 - The pipeline owns only the final `review -> done` transition and the post-finalize git sync summary.

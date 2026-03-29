@@ -152,6 +152,8 @@ Rules:
 
 ## Epic Finalize
 
+Apply `references/report-contract.md`.
+
 If every remaining story completed successfully:
 
 1. re-read `sprint_status`
@@ -161,7 +163,8 @@ If every remaining story completed successfully:
 5. write:
    - `epic-summary-*.md` under `epic_evidence_root` in `document_output_language`
    - `epic-run-*.yaml` under `epic_evidence_root`
-6. report that retrospective can be run separately
+6. emit the Epic final report block to terminal using the report contract
+7. report that retrospective can be run separately
 
 ## Epic Summary Requirements
 

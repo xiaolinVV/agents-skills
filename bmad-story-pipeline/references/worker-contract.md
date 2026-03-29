@@ -26,7 +26,9 @@ Every step worker must return a compact, structured result. Do not return only p
   "next_hint": "dev",
   "clarification_scope": null,
   "clarification_prompt": null,
-  "resume_step": null
+  "resume_step": null,
+  "qa_metrics": null,
+  "delivery_summary": []
 }
 ```
 
@@ -109,6 +111,40 @@ Examples:
 - `dev`: files modified, tasks completed
 - `qa`: tests passed/failed, blocking/major/minor findings
 - `review`: critical/high/medium/low counts
+
+## QA Metrics Contract
+
+When executable QA exists, provide `qa_metrics` in the final story aggregate shape:
+
+```json
+{
+  "tests_total": 31,
+  "tests_passed": 31,
+  "tests_failed": 0,
+  "qa_mode": "executable",
+  "qa_skipped": false,
+  "skip_reason": null
+}
+```
+
+When QA is skipped legitimately:
+
+```json
+{
+  "tests_total": null,
+  "tests_passed": null,
+  "tests_failed": null,
+  "qa_mode": "skipped",
+  "qa_skipped": true,
+  "skip_reason": "docs-only"
+}
+```
+
+## Delivery Summary Contract
+
+The final story aggregate should include `delivery_summary` as 3-6 short bullets describing what landed.
+
+This exists so Epic reporting can summarize capabilities without re-parsing long prose.
 
 ## Artifact Rules
 

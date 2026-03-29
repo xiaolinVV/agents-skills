@@ -14,6 +14,7 @@ Batch one Epic by reusing `bmad-story-pipeline`. This skill is a queue controlle
 3. Read `./references/queue-rules.md` before collecting or filtering the Epic queue.
 4. Read `./references/aggregate-contract.md` before invoking or interpreting embedded story-pipeline results.
 5. Read `./references/progress-contract.md` before emitting queue progress or stop checkpoints.
+6. Read `./references/report-contract.md` before generating final Epic delivery reports.
 
 ## When to Use
 
@@ -32,4 +33,5 @@ Do **not** use it to replace `bmad-story-pipeline` for single-story work.
 - Auto-mark `epic-X` as `done` only when every story under that Epic is now `done`.
 - Emit queue-level checkpoints using `references/progress-contract.md`.
 - Use only BMAD standard formal story / Epic status values in persisted status fields.
+- Generate a structured Epic delivery report using `references/report-contract.md`.
 - Do not auto-run retrospective. Only report that retrospective is available.
