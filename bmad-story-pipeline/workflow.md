@@ -24,6 +24,31 @@ Language rules:
 - all human-readable pipeline summaries and findings Markdown must use `document_output_language`
 - the lightweight `pipeline-run-*.yaml` ledger keeps stable machine-oriented keys
 
+## Formal Status Contract
+
+Apply `references/status-contract.md`.
+
+Hard rules:
+
+- only BMAD standard status values may be written into story files and `sprint_status`
+- pipeline runtime outcomes such as `needs-clarification`, `blocked-preflight`, and `blocked-execution` are **not** formal story statuses
+- runtime outcomes may appear in progress, evidence, and ledgers, but never in `Status:` or `development_status[...]`
+
+## Execution Interaction Modes
+
+### Interactive mode (default)
+
+Use interactive mode when the current session can ask the user follow-up questions and continue after the answer arrives.
+
+### Unattended mode (explicit)
+
+Use unattended mode only when the user explicitly wants hands-off execution, for example a sleep / overnight run.
+
+Rules:
+- unattended mode must not wait indefinitely for clarification
+- if a step needs user clarification and no safe continuation exists, write clarification evidence and stop as `blocked-preflight`
+- do not guess a default answer just to keep the queue moving
+
 ## Invocation Modes
 
 ### Normal mode
@@ -52,6 +77,9 @@ The structured embedded result must include at least:
 - `evidence_root`
 - `summary_path`
 - `git_sync` summary
+- `clarification_scope` when applicable
+- `clarification_prompt` when applicable
+- `resume_step` when applicable
 
 ## Story Selection
 
@@ -104,6 +132,8 @@ Requirements:
 - emit a run-start checkpoint before the first logical step
 - emit a standardized step progress block after each completed step
 - emit a retry checkpoint whenever execution loops back from QA or Review to Dev
+- emit a clarification checkpoint whenever execution pauses for user input
+- emit a clarification-resume checkpoint when execution resumes after user input
 - emit a standardized failure block when the story stops in `blocked-preflight` or `blocked-execution`
 - in embedded Epic mode, keep these story-level checkpoints visible; Epic mode may add queue checkpoints around them but must not replace them
 
@@ -173,6 +203,34 @@ Rules:
 - if review produces fixable High/Medium/Blocking findings, return `needs-fix` and route back to `dev`
 - review summaries and findings written under `evidence_root` must use `document_output_language`
 
+## Clarification Handling
+
+A step should return `needs-clarification` when:
+
+- a high-impact ambiguity remains
+- the ambiguity can be resolved by a short user answer
+- the story can continue safely once that answer is provided
+
+A clarification result is **not** the same as a hard block and is never a formal story status.
+
+Required behavior:
+
+- write a timestamped `needs-clarification-*.md` summary under `evidence_root`
+- include `clarification_scope`, `clarification_prompt`, and `resume_step` in the structured result
+- preserve the current BMAD formal story status while paused
+
+Mode-specific behavior:
+
+- standalone interactive story run:
+  - ask the user the required clarification
+  - once answered, resume the same story from `resume_step`
+- embedded Epic interactive run:
+  - return `needs-clarification` to the Epic controller
+  - let the Epic controller pause the queue and own the user interaction
+- unattended mode:
+  - do not wait for an answer
+  - convert the pause into `blocked-preflight` after writing clarification evidence
+
 ## Retry / Loop Policy
 
 - start `cycle = 0`
@@ -181,16 +239,21 @@ Rules:
 Transitions:
 
 - `create: passed|skipped -> validate`
+- `create: needs-clarification -> pause current story`
 - `create: blocked -> blocked-preflight`
 - `validate: passed -> dev`
+- `validate: needs-clarification -> pause current story`
 - `validate: blocked -> blocked-preflight`
 - `dev: passed -> qa`
+- `dev: needs-clarification -> pause current story`
 - `dev: blocked -> blocked-execution`
 - `qa: passed|skipped -> review`
 - `qa: needs-fix -> cycle + 1 -> dev`
+- `qa: needs-clarification -> pause current story`
 - `qa: blocked -> blocked-execution`
 - `review: passed -> finalize`
 - `review: needs-fix -> cycle + 1 -> dev`
+- `review: needs-clarification -> pause current story`
 - `review: blocked -> blocked-execution`
 
 If `cycle` would exceed `retry_limit`, stop with `blocked-execution` and report the unresolved gate.
@@ -232,17 +295,26 @@ Rules:
 
 ## Stop Conditions
 
-Stop immediately and report a blocking state when:
+Observable runtime outcomes may be one of:
+
+- `done`
+- `needs-clarification`
+- `blocked-preflight`
+- `blocked-execution`
+
+These runtime outcomes are not formal BMAD story statuses.
+
+Use `needs-clarification` only for interactive, recoverable pauses.
+
+Use `blocked-preflight` when:
 
 - story identity cannot be determined reliably
-- repo/framework autodetection is ambiguous
-- validation does not pass
+- repo/framework autodetection is ambiguous and cannot be resolved inside the current execution model
+- validation fails
+- unattended execution hits a clarification requirement
+
+Use `blocked-execution` when:
+
 - QA cannot produce a trustworthy result
 - review cannot produce a trustworthy result
 - retry limit is exceeded
-
-Final outcomes must be one of:
-
-- `done`
-- `blocked-preflight`
-- `blocked-execution`

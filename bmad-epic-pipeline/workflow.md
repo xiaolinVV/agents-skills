@@ -23,6 +23,31 @@ Language rules:
 - Epic human-readable summaries must use `document_output_language`
 - Epic ledger files keep stable machine-oriented keys
 
+## Formal Status Contract
+
+Apply `references/status-contract.md`.
+
+Hard rules:
+
+- only BMAD standard status values may be written into story and Epic status fields
+- runtime outcomes such as `needs-clarification`, `blocked-preflight`, and `blocked-execution` are queue-control results, not formal Epic statuses
+- runtime outcomes may appear in progress, evidence, and ledgers, but never in `development_status[epic-X]`
+
+## Execution Interaction Modes
+
+### Interactive mode (default)
+
+Use interactive mode when the current session can ask the user a question and continue the same Epic queue after the answer arrives.
+
+### Unattended mode (explicit)
+
+Use unattended mode only when the user explicitly asks for hands-off / overnight execution.
+
+Rules:
+- unattended mode must not wait for clarification
+- if the current story returns `needs-clarification`, stop the Epic as `blocked-preflight`
+- never guess clarification answers automatically
+
 ## Epic Selection
 
 ### Accepted inputs
@@ -84,6 +109,8 @@ Requirements:
 - emit a queue checkpoint before each story starts
 - emit a queue completion checkpoint after each successful story
 - surface a lightweight current-story step summary while embedded story execution is active
+- emit a queue pause checkpoint when the current story needs clarification
+- emit a queue resume checkpoint when the Epic continues after clarification
 - emit a queue stop checkpoint immediately when the Epic halts on a failed story
 
 ## Execution Model
@@ -106,7 +133,10 @@ For each remaining story in ascending order:
 1. invoke embedded `bmad-story-pipeline`
 2. wait for the structured result
 3. if result is `done`, continue to next story
-4. if result is `blocked-preflight` or `blocked-execution`, stop the Epic immediately
+4. if result is `needs-clarification`:
+   - in interactive mode, pause the Epic queue, ask the clarification, and then resume the same story
+   - in unattended mode, stop the Epic as `blocked-preflight`
+5. if result is `blocked-preflight` or `blocked-execution`, stop the Epic immediately
 
 The Epic controller must never continue past the first failed story.
 
@@ -148,15 +178,17 @@ The human-readable Epic summary must include:
 
 ## Stop Conditions
 
-Final outcomes must be one of:
+Observable runtime outcomes may be one of:
 
 - `done`
 - `blocked-preflight`
 - `blocked-execution`
+
+These runtime outcomes are not formal Epic statuses.
 
 Stop immediately when:
 
 - Epic selection is ambiguous
 - queue discovery is ambiguous
 - preflight fails
-- any story returns a blocking outcome
+- any story returns a true blocking outcome

@@ -28,6 +28,7 @@ Emit once before the first logical step, for example:
    Mode: normal | embedded-epic
    Plan: dev -> qa -> review -> finalize
    Cycle: 0/3
+   Formal Story Status: ready-for-dev
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 ```
 
@@ -41,6 +42,7 @@ Emit after every completed logical step:
    Cycle: 0/3
    ✅ Step: qa
    Result: 关键验证通过
+   Formal Story Status: review
 ```
 
 Requirements:
@@ -48,6 +50,7 @@ Requirements:
 - show current story id
 - show current cycle / retry count
 - show step name and brief result
+- if formal status is shown, label it explicitly as formal status
 
 ### Retry checkpoint
 
@@ -59,6 +62,33 @@ Emit whenever QA or Review routes back to Dev:
    Trigger: review -> needs-fix
    Next: dev
    New Cycle: 1/3
+   Formal Story Status: review
+```
+
+### Clarification checkpoint
+
+Emit whenever the story pauses for a recoverable user answer:
+
+```text
+⏸️ Story Pipeline Waiting for Clarification
+   Story: 6.5
+   Step: create
+   Cycle: 0/3
+   Scope: browser-target
+   Resume Step: create
+   Formal Story Status: backlog
+```
+
+### Clarification resume checkpoint
+
+Emit when the story resumes after clarification:
+
+```text
+▶️ Story Pipeline Resumed
+   Story: 6.5
+   Applied Clarification: browser-target=chrome-only
+   Resume Step: create
+   Formal Story Status: backlog
 ```
 
 ### Failure checkpoint
@@ -72,6 +102,7 @@ Emit whenever the story stops in a blocking state:
    Cycle: 2/3
    Outcome: blocked-execution
    Evidence: .../qa-summary-....md
+   Formal Story Status: review
 ```
 
 ## Embedded Mode Rule
@@ -88,5 +119,7 @@ The controller should retain only the compact aggregate state needed to continue
 - cycle count
 - final result
 - summary/evidence paths
+- clarification scope / prompt when paused
+- current formal story status when needed for safe resume
 
 Do not retain full step prose in controller state when compact checkpoints and artifacts already exist.

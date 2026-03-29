@@ -30,6 +30,7 @@ Emit once after queue discovery and preflight succeed, for example:
    Remaining Stories: 8
    Skipped Already Done: 1
    Order: 6.2 -> 6.3 -> 6.4 -> ...
+   Formal Epic Status: in-progress
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 ```
 
@@ -51,7 +52,7 @@ Emit before invoking each story pipeline:
 While the embedded story pipeline is active, surface a lightweight subprogress line derived from story-level checkpoints, for example:
 
 ```text
-↳ Story 6.3 Step 3/5 | Cycle 1/3 | qa
+↳ Story 6.3 Step 3/5 | Cycle 1/3 | qa | Formal Story Status: review
 ```
 
 This is an echo / summary of story progress, not a second independent story state machine.
@@ -66,6 +67,34 @@ Emit after each successful story:
    Story: 6.3
    Queue Position: [2/8]
    Result: done
+   Formal Epic Status: in-progress
+```
+
+### Queue pause checkpoint
+
+Emit when the current story needs clarification:
+
+```text
+⏸️ Epic Pipeline Paused
+   Epic: 6
+   Current Story: 6.5
+   Queue Position: [3/8]
+   State: needs-clarification
+   Waiting For: browser-target
+   Formal Epic Status: in-progress
+```
+
+### Queue resume checkpoint
+
+Emit when the Epic resumes after clarification:
+
+```text
+▶️ Epic Pipeline Resumed
+   Epic: 6
+   Current Story: 6.5
+   Applied Clarification: browser-target=chrome-only
+   Next: continue current story
+   Formal Epic Status: in-progress
 ```
 
 ### Queue stop checkpoint
@@ -79,7 +108,13 @@ Emit immediately when execution stops on the first failed story:
    Queue Position: [3/8]
    Outcome: blocked-execution
    Summary: .../final-summary-....md
+   Formal Epic Status: in-progress
 ```
+
+## Formal Status Display Rule
+
+If a progress checkpoint displays story or Epic status, it must label it explicitly as **formal** status.
+Do not imply that runtime outcomes such as `needs-clarification` are formal BMAD statuses.
 
 ## Controller Memory Rule
 
@@ -88,5 +123,7 @@ The Epic controller should retain only per-story aggregate results:
 - final result
 - summary path
 - git sync summary
+- clarification scope / prompt when paused
+- current formal story / Epic status when needed for safe resume
 
 It should not retain full step prose from every embedded story once that information has been checkpointed and written to evidence.

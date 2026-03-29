@@ -10,10 +10,11 @@ Orchestrate one BMAD story without inventing a second development methodology. T
 ## Required Loading
 
 1. Read `./workflow.md` fully before acting.
-2. Read `./references/autodetection.md` before choosing repos, test frameworks, QA provider, or git sync targets.
-3. Read `./references/worker-contract.md` before spawning any worker or interpreting worker results.
-4. Read `./references/git-sync.md` before any automatic commit / push behavior.
-5. Read `./references/progress-contract.md` before emitting progress or retry checkpoints.
+2. Read `./references/status-contract.md` before interpreting or writing any story / epic state.
+3. Read `./references/autodetection.md` before choosing repos, test frameworks, QA provider, or git sync targets.
+4. Read `./references/worker-contract.md` before spawning any worker or interpreting worker results.
+5. Read `./references/git-sync.md` before any automatic commit / push behavior.
+6. Read `./references/progress-contract.md` before emitting progress or retry checkpoints.
 
 ## When to Use
 
@@ -26,6 +27,7 @@ Do **not** use it for direct Epic batch execution; that belongs to `bmad-epic-pi
 ## Core Rules
 
 - Preserve BMAD's native intermediate states. Do not rewrite `bmad-create-story` or `bmad-dev-story` behavior.
+- Use only BMAD standard formal status values in story and sprint-status files.
 - Use the **current engine only**. Do not hand review or QA to another model family.
 - Run steps **serially**. Never run create, validate, dev, QA, review, or git sync in parallel.
 - Prefer a fresh worker for every step. If worker tools are unavailable, emulate fresh context by reloading only the minimum required files.

@@ -23,9 +23,22 @@ Every step worker must return a compact, structured result. Do not return only p
     "major_findings": 0,
     "minor_findings": 1
   },
-  "next_hint": "dev"
+  "next_hint": "dev",
+  "clarification_scope": null,
+  "clarification_prompt": null,
+  "resume_step": null
 }
 ```
+
+## Required Clarification Fields
+
+When `result = needs-clarification`, these fields must be non-null:
+
+- `clarification_scope`
+- `clarification_prompt`
+- `resume_step`
+
+The summary artifact for such a result should normally be a `needs-clarification-*.md` file.
 
 ## Allowed `result` Values
 
@@ -33,6 +46,7 @@ Only these values are valid:
 
 - `passed`
 - `needs-fix`
+- `needs-clarification`
 - `blocked`
 - `skipped`
 
@@ -40,11 +54,11 @@ No other synonyms or free-form statuses are allowed.
 
 ## Step-Specific Allowed Results
 
-- `create`: `passed | blocked | skipped`
-- `validate`: `passed | blocked`
-- `dev`: `passed | blocked`
-- `qa`: `passed | needs-fix | blocked | skipped`
-- `review`: `passed | needs-fix | blocked | skipped`
+- `create`: `passed | needs-clarification | blocked | skipped`
+- `validate`: `passed | needs-clarification | blocked`
+- `dev`: `passed | needs-clarification | blocked`
+- `qa`: `passed | needs-fix | needs-clarification | blocked | skipped`
+- `review`: `passed | needs-fix | needs-clarification | blocked | skipped`
 
 ## Result Meanings
 
@@ -56,14 +70,19 @@ The step completed with actionable findings that should route back to `dev`.
 
 Use only when the problem is real, attributable to the current story, and suitable for an automatic repair loop.
 
+### `needs-clarification`
+The step found a high-impact ambiguity that needs a short user answer, but execution can continue once that answer is provided.
+
+This is a recoverable pause state, not a hard block.
+
 ### `blocked`
 The step could not produce a trustworthy gate decision.
 
 Examples:
 - missing or broken prerequisite state
-- ambiguous target selection
 - framework/tooling failure that prevents reliable evaluation
 - incomplete review outcome
+- ambiguity that cannot be resolved safely within the current execution mode
 
 ### `skipped`
 The step was intentionally not executed for a valid, explicit reason.
@@ -106,6 +125,7 @@ The controller must use structured fields, not prose, to decide what happens nex
 
 Required controller behavior:
 - `needs-fix` from QA or review -> go to `dev`
+- `needs-clarification` -> pause current story and request clarification, or escalate to `blocked-preflight` in unattended mode
 - `blocked` -> stop immediately
 - `skipped` -> only continue if that step type allows it
 - `passed` -> advance normally
