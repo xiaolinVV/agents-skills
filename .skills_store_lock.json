@@ -36,6 +36,24 @@
       "zip_url": "https://lightmake.site/api/v1/download?slug=superpowers",
       "source": "skillhub",
       "version": "1.0.0"
+    },
+    "mermaid-diagrams": {
+      "name": "Mermaid Diagrams",
+      "zip_url": "https://lightmake.site/api/v1/download?slug=mermaid-diagrams",
+      "source": "skillhub",
+      "version": "0.1.0"
+    },
+    "svg": {
+      "name": "SVG",
+      "zip_url": "https://lightmake.site/api/v1/download?slug=svg",
+      "source": "skillhub",
+      "version": "1.1.0"
+    },
+    "diagram-generator": {
+      "name": "diagram-generator",
+      "zip_url": "https://lightmake.site/api/v1/download?slug=diagram-generator",
+      "source": "skillhub",
+      "version": "1.1.1"
     }
   }
 }
