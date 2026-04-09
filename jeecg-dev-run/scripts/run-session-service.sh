@@ -62,7 +62,7 @@ run_backend() {
   echo $$ > "${session_pid_file}"
   exec java -jar "${backend_jar}" \
     --server.port="${backend_port}" \
-    --jeecg.domainUrl.pc="http://127.0.0.1:${frontend_port}"
+    --jeecg.domainUrl.pc="http://${lan_ip}:${frontend_port}"
 }
 
 run_frontend() {
@@ -74,7 +74,7 @@ run_frontend() {
   echo $$ > "${session_pid_file}"
   exec env \
     PORT="${frontend_port}" \
-    VUE_APP_API_BASE_URL="http://127.0.0.1:${backend_port}/jeecg-boot" \
+    VUE_APP_API_BASE_URL="http://${lan_ip}:${backend_port}/jeecg-boot" \
     node --openssl-legacy-provider "${frontend_cli}" serve --port "${frontend_port}"
 }
 

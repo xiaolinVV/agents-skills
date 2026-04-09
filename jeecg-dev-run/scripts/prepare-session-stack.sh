@@ -29,8 +29,8 @@ session_frontend_pid_file="${pid_dir}/session-frontend.pid"
 
 backend_port="$(choose_port "backend(session)" "${session_backend_pid_file}" "${backend_port}" "${default_backend_port}")"
 frontend_port="$(choose_port "frontend(session)" "${session_frontend_pid_file}" "${frontend_port}" "${default_frontend_port}")"
-backend_url="http://127.0.0.1:${backend_port}/jeecg-boot/"
-frontend_url="http://127.0.0.1:${frontend_port}/"
+backend_url="http://${lan_ip}:${backend_port}/jeecg-boot/"
+frontend_url="http://${lan_ip}:${frontend_port}/"
 stack_mode="session"
 stack_agent="${STACK_AGENT:-codex}"
 stack_created_at="$(date -Iseconds)"
@@ -39,6 +39,8 @@ write_state_config
 cat <<INFO
 Interactive session state written to:
   ${state_file}
+
+Detected LAN IP: ${lan_ip}
 
 Chosen addresses:
   backend : ${backend_url}

@@ -148,6 +148,19 @@ default_backend_port=8080
 default_frontend_port=3000
 frontend_cli="${frontend_dir}/node_modules/.bin/vue-cli-service"
 
+detect_lan_ip() {
+  local ip=""
+  if command -v hostname >/dev/null 2>&1; then
+    ip="$(hostname -I 2>/dev/null | awk '{print $1}')"
+  fi
+  if [[ -z "${ip}" ]] && command -v ip >/dev/null 2>&1; then
+    ip="$(ip -4 route get 1.1.1.1 2>/dev/null | grep -oP 'src \K[\d.]+')" || true
+  fi
+  printf '%s\n' "${ip:-127.0.0.1}"
+}
+
+lan_ip="${JEECG_LAN_IP:-$(detect_lan_ip)}"
+
 resolve_backend_jar() {
   local jar_candidates=()
   local latest_jar=""
@@ -166,15 +179,16 @@ resolve_backend_jar() {
 }
 
 load_state_config() {
-  unset BACKEND_PORT FRONTEND_PORT BACKEND_URL FRONTEND_URL STACK_MODE STACK_AGENT STACK_CREATED_AT
+  unset BACKEND_PORT FRONTEND_PORT BACKEND_URL FRONTEND_URL STACK_MODE STACK_AGENT STACK_CREATED_AT LAN_IP
   if [[ -f "${state_file}" ]]; then
     # shellcheck disable=SC1090
     source "${state_file}"
   fi
+  lan_ip="${LAN_IP:-${lan_ip}}"
   backend_port="${BACKEND_PORT:-${default_backend_port}}"
   frontend_port="${FRONTEND_PORT:-${default_frontend_port}}"
-  backend_url="${BACKEND_URL:-http://127.0.0.1:${backend_port}/jeecg-boot/}"
-  frontend_url="${FRONTEND_URL:-http://127.0.0.1:${frontend_port}/}"
+  backend_url="${BACKEND_URL:-http://${lan_ip}:${backend_port}/jeecg-boot/}"
+  frontend_url="${FRONTEND_URL:-http://${lan_ip}:${frontend_port}/}"
   stack_mode="${STACK_MODE:-background}"
   stack_agent="${STACK_AGENT:-codex}"
   stack_created_at="${STACK_CREATED_AT:-}"
@@ -189,6 +203,7 @@ BACKEND_PORT=${backend_port}
 FRONTEND_PORT=${frontend_port}
 BACKEND_URL=${backend_url}
 FRONTEND_URL=${frontend_url}
+LAN_IP=${lan_ip}
 EOF
 }
 

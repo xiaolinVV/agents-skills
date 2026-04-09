@@ -37,8 +37,8 @@ fi
 
 backend_port="$(choose_port "backend" "${backend_pid_file}" "${backend_port}" "${default_backend_port}")"
 frontend_port="$(choose_port "frontend" "${frontend_pid_file}" "${frontend_port}" "${default_frontend_port}")"
-backend_url="http://127.0.0.1:${backend_port}/jeecg-boot/"
-frontend_url="http://127.0.0.1:${frontend_port}/"
+backend_url="http://${lan_ip}:${backend_port}/jeecg-boot/"
+frontend_url="http://${lan_ip}:${frontend_port}/"
 stack_mode="background"
 stack_agent="${STACK_AGENT:-codex}"
 stack_created_at="$(date -Iseconds)"
@@ -72,7 +72,7 @@ start_backend() {
     start_detached "${backend_pid_file}" "${backend_log}" \
       java -jar "${backend_jar}" \
       --server.port="${backend_port}" \
-      --jeecg.domainUrl.pc="http://127.0.0.1:${frontend_port}"
+      --jeecg.domainUrl.pc="http://${lan_ip}:${frontend_port}"
   )
   if ! wait_for_http_code "${backend_url}" 200 90; then
     echo "backend failed to become ready; tailing log" >&2
@@ -100,7 +100,7 @@ start_frontend() {
     start_detached "${frontend_pid_file}" "${frontend_log}" \
       env \
       PORT="${frontend_port}" \
-      VUE_APP_API_BASE_URL="http://127.0.0.1:${backend_port}/jeecg-boot" \
+      VUE_APP_API_BASE_URL="http://${lan_ip}:${backend_port}/jeecg-boot" \
       node --openssl-legacy-provider "${frontend_cli}" serve --port "${frontend_port}"
   )
   if ! wait_for_http_code "${frontend_url}" 200 180; then
