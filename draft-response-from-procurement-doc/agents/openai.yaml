@@ -1,0 +1,4 @@
+interface:
+  display_name: "Draft Response from Procurement Doc"
+  short_description: "Draft response files from procurement templates"
+  default_prompt: "Use this skill to identify response-template, qualification, requirement, and contract sections in a procurement document, then draft response files and a missing-information checklist."
