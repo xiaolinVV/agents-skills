@@ -1,5 +1,0 @@
-source_repo=https://github.com/eze-is/web-access
-source_branch=main
-source_commit=1116c082a7f13860c3befd5307a272d6a120206f
-installed_at=2026-03-30 10:40 Asia/Shanghai
-installed_by=OpenClaw main session

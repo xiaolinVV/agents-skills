@@ -16,6 +16,26 @@ allowed-tools: Bash(bb-browser:*)
 
 运行在用户真实浏览器中，复用已登录的账号，不触发反爬检测。
 
+## 联网任务决策原则
+
+执行信息获取任务前，先明确成功标准：需要拿到什么内容，什么结果算完成。
+
+优先按数据来源选择路径：
+
+| 场景 | 优先方式 |
+|------|----------|
+| 已有 site adapter | `bb-browser site <name>` |
+| 已知接口或需要登录态请求 | `bb-browser fetch <url>` |
+| 已知网页，需要读取正文或结构 | `bb-browser open` + `bb-browser eval` |
+| 需要点击、填写、翻页、上传 | `bb-browser snapshot -i` + 交互命令 |
+| 需要核实事实 | 找一手来源，不把搜索结果当证据 |
+| 静态请求失败或页面依赖 JS | 进入真实浏览器读取 DOM |
+| 内容在图片或视频中 | 优先提取媒体 URL，必要时截图 |
+
+搜索只用于发现来源；证明事实要回到官网、公告、原文、源码或原始页面。进入页面后先读结构，再操作页面：先用 `snapshot` / `eval` 看 DOM、链接、按钮、表单和正文位置，再决定点击、滚动或提取。
+
+复杂联网、反爬、登录态和信息核实任务的完整策略见 [references/network-strategy.md](references/network-strategy.md)。
+
 ## 快速开始
 
 ```bash
@@ -353,6 +373,7 @@ done
 
 | 文档 | 说明 |
 |------|------|
+| [references/network-strategy.md](references/network-strategy.md) | 联网任务决策策略：路径选择、一手来源核实、静态优先、浏览器兜底 |
 | [references/site-system.md](references/site-system.md) | Site 系统完整指南：35 平台列表、命令用法、自动 tab 管理 |
 | [references/adapter-development.md](references/adapter-development.md) | Adapter 开发指南：API 逆向、三层复杂度、元数据格式 |
 | [references/fetch-and-network.md](references/fetch-and-network.md) | Fetch 与 Network 高级功能：带登录态请求、请求拦截与 mock |
