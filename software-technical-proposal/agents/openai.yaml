@@ -1,0 +1,4 @@
+interface:
+  display_name: "软件技术方案生成"
+  short_description: "按采购文件生成正式软件行业项目技术方案DOCX文档"
+  default_prompt: "请根据采购文件生成正式的软件行业项目技术方案，并按我选择的模板输出DOCX。"
