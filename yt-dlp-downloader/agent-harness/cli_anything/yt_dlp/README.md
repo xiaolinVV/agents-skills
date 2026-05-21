@@ -35,4 +35,7 @@ Run `cli-anything-yt-dlp` without a subcommand to enter the REPL.
 - `raw -- <args>` mirrors official `yt-dlp` behavior without harness defaults.
 - Structured commands use safer agent defaults: `--ignore-config`, explicit JS
   runtime selection, MP4 merge preference, and `after_move:filepath`.
+- The default structured output directory is platform-aware: macOS checks
+  `~/影片`, then `~/Movies`; Linux checks `~/视频`, `~/Videos`, then `~/影片`;
+  Windows checks `~/Videos`, `~/视频`, then `~/影片`.
 - The harness never reimplements extractors. It invokes the official executable.

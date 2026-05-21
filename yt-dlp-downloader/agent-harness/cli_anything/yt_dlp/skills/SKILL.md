@@ -83,6 +83,9 @@ cli-anything-yt-dlp --json options search subtitles
 ## Defaults
 
 - Structured downloads pass `--ignore-config`.
+- Structured downloads save under the host video folder by default: macOS checks
+  `~/影片`, then `~/Movies`; Linux checks `~/视频`, `~/Videos`, then `~/影片`;
+  Windows checks `~/Videos`, `~/视频`, then `~/影片`.
 - Structured downloads prefer `bv*+ba/b` and MP4 merge output.
 - Structured downloads report final moved paths with `after_move:filepath`.
 - Large playlists use archive files to avoid redownloading existing entries.

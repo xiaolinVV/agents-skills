@@ -3,7 +3,12 @@ from __future__ import annotations
 import json
 from pathlib import Path
 
-from cli_anything.yt_dlp.core.jobs import DownloadJob, build_structured_download_args, stable_archive_key
+from cli_anything.yt_dlp.core.jobs import (
+    DownloadJob,
+    build_structured_download_args,
+    resolve_default_output_dir,
+    stable_archive_key,
+)
 from cli_anything.yt_dlp.core.options import parse_help_sections, search_options
 from cli_anything.yt_dlp.core.results import envelope, overall_status
 from cli_anything.yt_dlp.core.session import SessionStore
@@ -62,6 +67,45 @@ def test_structured_download_command_keeps_skill_defaults(tmp_path: Path) -> Non
     assert "after_move:filepath" in args
     assert "--no-playlist" in args
     assert "https://example.test/video" == args[-1]
+
+
+def test_default_output_dir_prefers_existing_macos_movie_names(tmp_path: Path) -> None:
+    home = tmp_path / "home"
+    localized = home / "影片"
+    localized.mkdir(parents=True)
+
+    output_dir = resolve_default_output_dir(home=home, platform="darwin")
+
+    assert output_dir == localized / "yt-dlp"
+
+
+def test_default_output_dir_uses_macos_movies_fallback(tmp_path: Path) -> None:
+    home = tmp_path / "home"
+    home.mkdir()
+
+    output_dir = resolve_default_output_dir(home=home, platform="darwin")
+
+    assert output_dir == home / "Movies" / "yt-dlp"
+
+
+def test_default_output_dir_ignores_existing_files(tmp_path: Path) -> None:
+    home = tmp_path / "home"
+    home.mkdir()
+    (home / "影片").write_text("not a directory", encoding="utf-8")
+
+    output_dir = resolve_default_output_dir(home=home, platform="darwin")
+
+    assert output_dir == home / "Movies" / "yt-dlp"
+
+
+def test_default_output_dir_prefers_existing_linux_xdg_names(tmp_path: Path) -> None:
+    home = tmp_path / "home"
+    videos = home / "Videos"
+    videos.mkdir(parents=True)
+
+    output_dir = resolve_default_output_dir(home=home, platform="linux")
+
+    assert output_dir == videos / "yt-dlp"
 
 
 def test_parse_after_move_paths_prefers_existing_files(tmp_path: Path) -> None:

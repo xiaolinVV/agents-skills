@@ -10,7 +10,7 @@
 - `core.options`: parse `yt-dlp --help` sections and option rows; search options by text.
 - `core.results`: create stable JSON envelopes for success and error results.
 - `core.session`: create named session directories, save/load JSON state, append history.
-- `core.jobs`: build structured download commands without losing current skill defaults.
+- `core.jobs`: build structured download commands, resolve platform-aware video output directories, and preserve current skill defaults.
 - `utils.yt_dlp_backend`: detect macOS app browsers, parse final paths from `after_move`, build JS runtime args, and preserve raw passthrough behavior.
 
 ## E2E Test Plan
@@ -44,5 +44,5 @@ Result:
 
 ## Coverage Notes
 
-- Covered installed CLI resolution, JSON system status, raw passthrough, legacy shim, migration initializer dry-run, option parsing, session state, macOS browser detection, and a real local HTTP MP4 download through official `yt-dlp`.
+- Covered installed CLI resolution, JSON system status, raw passthrough, legacy shim, migration initializer dry-run, platform-aware default output directory resolution, option parsing, session state, macOS browser detection, and a real local HTTP MP4 download through official `yt-dlp`.
 - External sites such as YouTube and Xiaohongshu are intentionally not used in tests because anti-bot behavior would make the suite nondeterministic.

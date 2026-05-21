@@ -50,7 +50,9 @@ python3 scripts/yt_dlp_downloader.py preflight --json
 
 ## Defaults
 
-- Save structured downloads to `~/视频/yt-dlp` unless the user says otherwise.
+- Save structured downloads under the host's video folder unless the user says
+  otherwise: macOS checks `~/影片`, then `~/Movies`; Linux checks `~/视频`,
+  `~/Videos`, then `~/影片`; Windows checks `~/Videos`, `~/视频`, then `~/影片`.
 - Structured downloads pass `--ignore-config`.
 - Prefer `-f bv*+ba/b`.
 - Prefer MP4 for merged streams with `--merge-output-format mp4`.

@@ -2,11 +2,30 @@ from __future__ import annotations
 
 from dataclasses import dataclass, field
 import hashlib
+import sys
 from pathlib import Path
 from typing import Any, Sequence
 
 
-DEFAULT_OUTPUT_DIR = Path.home() / "视频" / "yt-dlp"
+def resolve_default_output_dir(home: Path | None = None, platform: str | None = None) -> Path:
+    home_dir = Path(home or Path.home()).expanduser()
+    platform_name = platform or sys.platform
+    if platform_name == "darwin":
+        return _first_existing_child(home_dir, ("影片", "Movies"), fallback="Movies") / "yt-dlp"
+    if platform_name.startswith("win"):
+        return _first_existing_child(home_dir, ("Videos", "视频", "影片"), fallback="Videos") / "yt-dlp"
+    return _first_existing_child(home_dir, ("视频", "Videos", "影片"), fallback="Videos") / "yt-dlp"
+
+
+def _first_existing_child(home: Path, names: Sequence[str], fallback: str) -> Path:
+    for name in names:
+        candidate = home / name
+        if candidate.is_dir():
+            return candidate
+    return home / fallback
+
+
+DEFAULT_OUTPUT_DIR = resolve_default_output_dir()
 DEFAULT_CHUNK_SIZE = 100
 DEFAULT_HUGE_THRESHOLD = 100
 
