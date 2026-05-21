@@ -9,6 +9,14 @@ cd ~/.agents/skills/yt-dlp-downloader/agent-harness
 pip install -e .
 ```
 
+When the whole skill has just been copied to a new machine, prefer the bundled
+initializer from the skill root:
+
+```bash
+python3 scripts/init_skill.py --json
+python3 scripts/init_skill.py --json --bootstrap-yt-dlp
+```
+
 ## Core Commands
 
 ```bash

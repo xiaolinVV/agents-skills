@@ -1,4 +1,4 @@
 interface:
   display_name: "YT-DLP Downloader"
-  short_description: "CLI-Anything harness for yt-dlp downloads, probing, cookies, archives, and raw passthrough"
-  default_prompt: "Use $yt-dlp-downloader to run cli-anything-yt-dlp with JSON output for preflight, probe, download, browser cookies, option search, archive-safe playlists, or raw official yt-dlp passthrough."
+  short_description: "CLI-Anything harness for yt-dlp downloads, probing, cookies, archives, initialization, and raw passthrough"
+  default_prompt: "Use $yt-dlp-downloader to initialize copied skills with scripts/init_skill.py, then run cli-anything-yt-dlp with JSON output for preflight, probe, download, browser cookies, option search, archive-safe playlists, or raw official yt-dlp passthrough."

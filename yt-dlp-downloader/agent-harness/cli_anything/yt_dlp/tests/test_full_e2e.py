@@ -63,6 +63,24 @@ def test_legacy_preflight_shim_json() -> None:
     assert "yt_dlp" in data
 
 
+def test_init_skill_dry_run_json() -> None:
+    script = SKILL_ROOT / "scripts" / "init_skill.py"
+
+    result = subprocess.run([sys.executable, str(script), "--json", "--dry-run"], capture_output=True, text=True, check=True)
+    data = json.loads(result.stdout)
+
+    assert data["command"] == "init_skill"
+    assert data["status"] == "dry_run"
+    assert data["skill_root"] == str(SKILL_ROOT)
+    assert data["harness_root"] == str(HARNESS_ROOT)
+    assert [step["name"] for step in data["steps"]] == [
+        "install cli-anything harness",
+        "check cli command",
+        "system status",
+    ]
+    assert data["next_actions"]
+
+
 def test_download_local_http_video_json(tmp_path: Path) -> None:
     ffmpeg = shutil.which("ffmpeg")
     if not ffmpeg:

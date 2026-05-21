@@ -3,7 +3,7 @@
 ## Test Inventory Plan
 
 - `test_core.py`: unit coverage for option parsing, command construction, path parsing, archive keys, result envelopes, session state, and platform detection.
-- `test_full_e2e.py`: subprocess coverage for the installed CLI, compatibility shim, and a local HTTP download through the real `yt-dlp` backend.
+- `test_full_e2e.py`: subprocess coverage for the installed CLI, compatibility shim, migration initializer, and a local HTTP download through the real `yt-dlp` backend.
 
 ## Unit Test Plan
 
@@ -18,6 +18,7 @@
 - Validate `cli-anything-yt-dlp --help` and `--json system status` from a subprocess.
 - Validate `cli-anything-yt-dlp --json raw -- --version` invokes the official executable.
 - Validate old `scripts/yt_dlp_downloader.py preflight --json` still returns the old command name.
+- Validate `scripts/init_skill.py --json --dry-run` exposes deterministic migration steps.
 - Download a generated tiny MP4 from a local HTTP server and verify the final file path exists.
 
 ## Realistic Workflow Scenarios
@@ -37,11 +38,11 @@ CLI_ANYTHING_FORCE_INSTALLED=1 python3 -m pytest -q
 Result:
 
 ```text
-..............                                                           [100%]
-14 passed in 20.79s
+...............                                                          [100%]
+15 passed in 23.86s
 ```
 
 ## Coverage Notes
 
-- Covered installed CLI resolution, JSON system status, raw passthrough, legacy shim, option parsing, session state, macOS browser detection, and a real local HTTP MP4 download through official `yt-dlp`.
+- Covered installed CLI resolution, JSON system status, raw passthrough, legacy shim, migration initializer dry-run, option parsing, session state, macOS browser detection, and a real local HTTP MP4 download through official `yt-dlp`.
 - External sites such as YouTube and Xiaohongshu are intentionally not used in tests because anti-bot behavior would make the suite nondeterministic.

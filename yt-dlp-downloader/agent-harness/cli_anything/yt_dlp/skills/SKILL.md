@@ -14,6 +14,22 @@ flags.
 
 ## Command
 
+After copying this skill to a new host, initialize it:
+
+```bash
+python3 scripts/init_skill.py --json
+```
+
+For a host where `yt-dlp` should be installed automatically if missing:
+
+```bash
+python3 scripts/init_skill.py --json --bootstrap-yt-dlp
+```
+
+The initializer installs the bundled CLI-Anything harness, checks the CLI
+command, runs system status, and returns next actions for missing PATH entries or
+system packages such as `ffmpeg`.
+
 ```bash
 cli-anything-yt-dlp --json system status
 ```

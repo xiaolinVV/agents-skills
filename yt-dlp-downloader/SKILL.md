@@ -9,6 +9,28 @@ Use the bundled CLI-Anything harness, not ad hoc `yt-dlp` commands.
 
 ## Preflight
 
+After this skill is copied to a new machine, initialize it first:
+
+```bash
+python3 scripts/init_skill.py --json
+```
+
+If the host should install `yt-dlp` automatically when missing:
+
+```bash
+python3 scripts/init_skill.py --json --bootstrap-yt-dlp
+```
+
+Use dry-run mode before changing a newly provisioned host:
+
+```bash
+python3 scripts/init_skill.py --json --dry-run
+```
+
+The initializer installs the bundled CLI-Anything harness, checks whether
+`cli-anything-yt-dlp` is on `PATH`, runs system status, and returns next actions
+for missing `ffmpeg` or PATH setup. It does not install system packages.
+
 ```bash
 cli-anything-yt-dlp --json system status
 ```
@@ -91,5 +113,6 @@ paid access controls, or account restrictions.
 ## Resources
 
 - CLI harness: `agent-harness/`
+- Migration initializer: `scripts/init_skill.py`
 - Compatibility script: `scripts/yt_dlp_downloader.py`
 - Official usage notes: `references/official-usage.md`
