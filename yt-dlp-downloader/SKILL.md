@@ -1,207 +1,95 @@
 ---
 name: yt-dlp-downloader
-description: Download one or more public video or audio URLs with yt-dlp, optionally using browser cookies for logged-in content. Use when the user gives links from sites supported by yt-dlp, asks to save videos into a local directory, wants playlist handling, or needs incremental batched downloads for large collections.
+description: Download, probe, inspect, and batch-handle media URLs through a CLI-Anything harness for yt-dlp. Use when a user provides URLs supported by yt-dlp, asks to save video/audio locally, inspect formats/subtitles/extractors, use browser cookies, or pass official yt-dlp flags with JSON output.
 ---
 
 # YT-DLP Downloader
 
-Use this skill to turn one or more URLs into downloaded media files on the local machine.
+Use the bundled CLI-Anything harness, not ad hoc `yt-dlp` commands.
 
-## Pitfalls already hit in real use
+## Preflight
 
-Record these and treat them as facts until reality proves otherwise:
+```bash
+cli-anything-yt-dlp --json system status
+```
 
-- Ubuntu 24.04 style Python environments may reject normal pip installs with `externally-managed-environment`.
-- Some machines also lack `python3-venv` / `ensurepip`, so a managed venv may fail before it starts.
-- Recent yt-dlp + YouTube flows may still fail unless `--js-runtimes` is passed explicitly, even when `node` is already installed.
-- Public YouTube downloads may hit `Sign in to confirm you’re not a bot`; in that case, switch to browser cookies instead of pretending the URL is bad.
-- On Linux, Chrome/Chromium cookie decryption may fail unless the Python package `secretstorage` is installed.
-- Xiaohongshu can work anonymously for some URLs and fail hard for others. Do not over-generalize from one success.
+If the command is missing:
+
+```bash
+cd ~/.agents/skills/yt-dlp-downloader/agent-harness
+python3 -m pip install -e .
+```
+
+Legacy scripts still work:
+
+```bash
+python3 scripts/yt_dlp_downloader.py preflight --json
+```
 
 ## Defaults
 
-- Save files to `~/视频/yt-dlp` unless the user says otherwise.
-- In OpenClaw Feishu chats, prefer an output directory inside the current workspace such as `./tmp/yt-dlp` so downloaded MP4 files can be re-sent as local media reliably.
-- Prefer yt-dlp's best video + best audio selection: `-f bv*+ba/b`.
-- Prefer MP4 when yt-dlp must merge streams: `--merge-output-format mp4`.
-- Keep the original container when yt-dlp downloads a single ready-made file and no merge is needed.
-- Ignore user/global yt-dlp config by always passing `--ignore-config`.
-- If a supported JavaScript runtime exists, pass `--js-runtimes` automatically so YouTube does not silently degrade.
-- Use `--print after_move:filepath` to report final paths after post-processing.
-- For very large playlists, switch to archive-based batched downloads.
+- Save structured downloads to `~/视频/yt-dlp` unless the user says otherwise.
+- Structured downloads pass `--ignore-config`.
+- Prefer `-f bv*+ba/b`.
+- Prefer MP4 for merged streams with `--merge-output-format mp4`.
+- Report final paths with `--print after_move:filepath`.
+- Use explicit `--js-runtimes` when a supported runtime exists.
+- Use archive files for large playlists to avoid redownloading items.
+- Use browser cookies only when the user asks for logged-in/private/age-restricted access.
 
-## OpenClaw Feishu auto-return
+## Common Commands
 
-- When this skill runs inside OpenClaw on the Feishu channel and the download output includes MP4 files, automatically send the actual MP4 file(s) back as previewable Feishu video/media messages by default.
-- Do this even if the user did not explicitly say “send it back”. Do not default to replying with only a filesystem path.
-- For 1 MP4: send it automatically as a previewable video message.
-- For 2-3 MP4 files: send each automatically as a previewable video message.
-- For 4+ MP4 files: automatically send the first 3 as previewable video messages, then summarize how many remain and where they were saved.
-- Use the `message` tool to send the real local file as media, not as path text.
-- Prefer sending from a path inside the current workspace. If the final MP4 path is outside the workspace or otherwise unsafe for local media sending, copy the MP4 into `./tmp/yt-dlp-send/` first and send from there.
-- Fallback order: previewable MP4 video message -> real file attachment -> plain text path or error explanation only if file sending fails.
-- After successfully delivering the user-visible file(s) with the `message` tool, reply with `NO_REPLY` to avoid duplicate chat messages.
-
-## Workflow
-
-### 1. Check the machine first
-
-Run:
+Probe:
 
 ```bash
-python3 scripts/yt_dlp_downloader.py preflight
+cli-anything-yt-dlp --json inspect probe "<URL>"
 ```
 
-Use `preflight` to confirm:
-- `yt-dlp` exists
-- `ffmpeg` and `ffprobe` exist
-- a JavaScript runtime exists for better YouTube support
-- Chrome/Chromium/Firefox are available if the user wants browser cookies
-
-If `yt-dlp` is missing, run:
+Download a single video:
 
 ```bash
-python3 scripts/yt_dlp_downloader.py bootstrap --channel stable
+cli-anything-yt-dlp --json download --playlist-mode single "<URL>"
 ```
 
-If the user explicitly wants the nightly build, use `--channel nightly`.
-
-Bootstrap behavior:
-- try a managed virtual environment first
-- if Ubuntu/Debian blocks that because `python3-venv` or `ensurepip` is missing, fall back to `pip install --user --break-system-packages`
-- also install `secretstorage` so Chrome/Chromium cookies on Linux do not fail later
-
-Do **not** pretend the environment is ready when `ffmpeg` is missing. Return the install hint instead.
-
-### 2. Probe unclear URLs before downloading
-
-Run `probe` when any of these are true:
-- the user gave a playlist or channel/collection URL
-- the platform support is unclear
-- the user asked whether a site like Xiaohongshu currently works
-- you need to estimate playlist size before downloading
-
-Example:
+Download a whole playlist:
 
 ```bash
-python3 scripts/yt_dlp_downloader.py probe 'https://example.com/video'
+cli-anything-yt-dlp --json download --playlist-mode playlist "<URL>"
 ```
 
-`probe` returns extractor, title, playlist-like detection, and an estimated entry count when yt-dlp can provide it.
-
-## Downloading
-
-### Single or a few URLs
-
-Use:
+Use Chrome cookies:
 
 ```bash
-python3 scripts/yt_dlp_downloader.py download 'URL1' 'URL2'
+cli-anything-yt-dlp --json download --browser chrome "<URL>"
 ```
 
-In OpenClaw Feishu chats, prefer:
+Search official options from the installed yt-dlp:
 
 ```bash
-python3 scripts/yt_dlp_downloader.py download --output-dir ./tmp/yt-dlp 'URL1' 'URL2'
+cli-anything-yt-dlp --json options search subtitles
 ```
 
-This keeps the final MP4 files in a workspace-local path so they can be auto-returned as previewable Feishu video messages more reliably.
-
-### Force single-video behavior
-
-If a URL may point to both a video and a playlist, and the user only wants the current item:
+Mirror official yt-dlp exactly:
 
 ```bash
-python3 scripts/yt_dlp_downloader.py download --playlist-mode single 'URL'
+cli-anything-yt-dlp --json raw -- --version
+cli-anything-yt-dlp raw -- --list-extractors
 ```
 
-### Force playlist behavior
+## Failure Handling
 
-If the user explicitly says "download the whole playlist/合集/列表":
-
-```bash
-python3 scripts/yt_dlp_downloader.py download --playlist-mode playlist 'URL'
-```
-
-### Use browser cookies
-
-Only use cookies when the user asks for logged-in content or age-restricted/private access.
-
-Chrome:
-
-```bash
-python3 scripts/yt_dlp_downloader.py download --browser chrome 'URL'
-```
-
-On Linux, if Chrome/Chromium cookies are needed, make sure `preflight` shows `secretstorage: yes`. If not, run `bootstrap` again or install it manually.
-
-Firefox:
-
-```bash
-python3 scripts/yt_dlp_downloader.py download --browser firefox 'URL'
-```
-
-Cookie file:
-
-```bash
-python3 scripts/yt_dlp_downloader.py download --cookies-file /path/to/cookies.txt 'URL'
-```
-
-Use either `--browser` or `--cookies-file`, never both.
-
-## Large playlists and collections
-
-When `probe` shows more than 100 items, or when the user clearly says the list is huge, let the script use incremental batched mode.
-
-Behavior:
-- create `OUTPUT_DIR/.archives/<playlist-key>.txt`
-- reuse the archive on reruns to skip already-downloaded items
-- download in chunks of 100 by default
-- preserve final file paths from each chunk
-
-This is the point: avoid redownloading hundreds of old items.
-
-If needed, override the defaults:
-
-```bash
-python3 scripts/yt_dlp_downloader.py download \
-  --chunk-size 50 \
-  --huge-threshold 200 \
-  --max-downloads 25 \
-  'URL'
-```
-
-## Extra yt-dlp arguments
-
-Use repeated `--extra-arg` values to pass through specific yt-dlp flags when the user explicitly needs them.
-
-Example:
-
-```bash
-python3 scripts/yt_dlp_downloader.py download \
-  --extra-arg=--sleep-interval \
-  --extra-arg=5 \
-  'URL'
-```
-
-Do not pile on random flags by default. Extra flags exist as an escape hatch.
-
-## Failure handling
-
-- If `ffmpeg` is missing, fail fast and return the install hint.
-- If `probe` or `download` fails, return the extractor, stderr tail, and the exact final paths that were produced before failure.
-- For YouTube, expect that public probing/downloading may still require cookies because of anti-bot checks even when `yt-dlp-ejs` and a JS runtime are installed.
-- For Linux Chrome/Chromium cookies, expect a hard failure if `secretstorage` is missing. Fix that first instead of retrying blindly.
-- For Xiaohongshu, state the truth: yt-dlp may have an extractor, but the site is unstable and frequently blocked by anti-bot or CAPTCHA.
-- Do not claim fixed platform support if the extractor currently fails.
+- If `ffmpeg` is missing, stop and return the install hint.
+- If YouTube says sign-in/bot challenge, suggest cookies; do not claim the URL is invalid.
+- If Chrome/Chromium cookies fail on Linux, check `secretstorage` first.
+- Xiaohongshu/Rednote support is unstable; report actual extractor stderr and do not promise support.
 
 ## Boundaries
 
-- Download only content the user is authorized to download.
-- Do not help bypass DRM, paid access controls, or account restrictions.
-- Do not promise that any given site is stable just because yt-dlp lists it.
+Download only content the user is authorized to download. Do not help bypass DRM,
+paid access controls, or account restrictions.
 
 ## Resources
 
-- Script entrypoint: `scripts/yt_dlp_downloader.py`
-- Official fact summary: `references/official-usage.md`
+- CLI harness: `agent-harness/`
+- Compatibility script: `scripts/yt_dlp_downloader.py`
+- Official usage notes: `references/official-usage.md`

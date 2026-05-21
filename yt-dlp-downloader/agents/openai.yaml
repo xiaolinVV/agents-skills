@@ -1,4 +1,4 @@
 interface:
   display_name: "YT-DLP Downloader"
-  short_description: "下载视频链接，支持Cookies、MP4优先与大列表分批"
-  default_prompt: "Use $yt-dlp-downloader to preflight dependencies, download one or more video URLs into ~/视频/yt-dlp, prefer MP4 when merging, optionally use browser cookies, and handle huge playlists incrementally in batches."
+  short_description: "CLI-Anything harness for yt-dlp downloads, probing, cookies, archives, and raw passthrough"
+  default_prompt: "Use $yt-dlp-downloader to run cli-anything-yt-dlp with JSON output for preflight, probe, download, browser cookies, option search, archive-safe playlists, or raw official yt-dlp passthrough."

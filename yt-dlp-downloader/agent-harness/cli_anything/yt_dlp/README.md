@@ -1,0 +1,30 @@
+# cli-anything-yt-dlp
+
+Agent-native CLI-Anything harness for the official `yt-dlp` executable.
+
+## Install
+
+```bash
+cd ~/.agents/skills/yt-dlp-downloader/agent-harness
+pip install -e .
+```
+
+## Core Commands
+
+```bash
+cli-anything-yt-dlp system status
+cli-anything-yt-dlp --json system status
+cli-anything-yt-dlp raw -- --version
+cli-anything-yt-dlp options search cookies
+cli-anything-yt-dlp inspect probe "https://example.com/video"
+cli-anything-yt-dlp download --playlist-mode single "https://example.com/video"
+```
+
+Run `cli-anything-yt-dlp` without a subcommand to enter the REPL.
+
+## Design
+
+- `raw -- <args>` mirrors official `yt-dlp` behavior without harness defaults.
+- Structured commands use safer agent defaults: `--ignore-config`, explicit JS
+  runtime selection, MP4 merge preference, and `after_move:filepath`.
+- The harness never reimplements extractors. It invokes the official executable.
