@@ -1,4 +1,4 @@
 interface:
   display_name: "软件技术方案生成"
-  short_description: "按采购文件生成正式软件行业项目技术方案DOCX文档"
-  default_prompt: "请根据采购文件生成正式的软件行业项目技术方案，并按我选择的模板输出DOCX。"
+  short_description: "按采购文件编写正式技术方案并执行三道确认闸门完整流程"
+  default_prompt: "使用 $software-technical-proposal 根据采购文件编写技术方案，先完成模板、目录大纲和正文确认，再输出 DOCX。"
