@@ -1,7 +1,0 @@
-interface:
-  display_name: "Jeecg Dev Run"
-  short_description: "Run and debug a Jeecg workspace locally"
-  default_prompt: "Use $jeecg-dev-run to start, stop, or troubleshoot a Jeecg-Boot backend + Vue admin workspace."
-
-policy:
-  allow_implicit_invocation: false

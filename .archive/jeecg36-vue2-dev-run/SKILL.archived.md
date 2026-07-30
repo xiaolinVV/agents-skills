@@ -1,11 +1,29 @@
+# Archived: jeecg36-vue2-dev-run
+
+归档日期：2026-07-30。
+
+本目录不再提供可自动发现的 `SKILL.md`，相关 Codex、Claude Code 和 OpenCode 链接已撤销。内容仅适用于 JeecgBoot 3.6.x + `ant-design-vue-jeecg`，当前 Vue3 项目使用项目级运行 Skill。
+
+以下内容仅为可恢复的遗留运行手册。
+
 ---
-name: jeecg-dev-run
-description: Run and troubleshoot the local Jeecg-Boot development stack for any workspace that follows the standard backend plus Vue admin layout (`jeecg-boot/` and `ant-design-vue-jeecg/`). Use this as the generic fallback runner when the current workspace does not provide a more specific repo-local local-run skill, or when explicitly invoked as `$jeecg-dev-run`.
+name: jeecg36-vue2-dev-run
+description: Run and troubleshoot legacy JeecgBoot 3.6.x workspaces with a jeecg-boot backend and ant-design-vue-jeecg Vue2 frontend. Use only as a fallback when that exact legacy layout is present and no repo-local runner exists, or when explicitly invoked as $jeecg36-vue2-dev-run. Do not use for jeecgboot-vue3 or JeecgBoot 3.9.x workspaces.
 ---
 
-# Jeecg Dev Run
+# JeecgBoot 3.6.x Vue2 Dev Run
 
-Use this skill as the generic local runner for Jeecg-based business workspaces. Keep it focused on the standard backend plus frontend stack and leave repo-specific extras to repo-local skills.
+Use this skill only as the legacy local runner for JeecgBoot 3.6.x + Vue2 business workspaces. Leave current Vue3 and repository-specific behavior to repo-local skills.
+
+## Compatibility Gate
+
+Before touching a service, verify all of the following:
+
+- The frontend directory is exactly `ant-design-vue-jeecg/` and uses Vue CLI.
+- The backend root `pom.xml` identifies a JeecgBoot 3.6.x line.
+- No more specific repo-local run skill exists.
+
+If the workspace contains `jeecgboot-vue3/`, identifies JeecgBoot 3.9.x, or provides a repo-local runner, stop and use the repo-local runner. Explicit invocation does not waive this compatibility check.
 
 ## Workflow
 
@@ -13,7 +31,7 @@ Use this skill as the generic local runner for Jeecg-based business workspaces. 
 2. Before using this skill, check whether the current workspace provides a more specific repo-local local-run skill.
    - If a repo-local runner exists, that runner takes precedence.
    - If no repo-local runner exists and the workspace matches the standard Jeecg layout, use this skill.
-   - If the user explicitly invokes `$jeecg-dev-run`, always use this skill.
+   - If the user explicitly invokes `$jeecg36-vue2-dev-run`, still enforce the Compatibility Gate before using it.
 3. Detect the workspace from the current directory, a backend subdirectory, or a frontend subdirectory before touching any service.
 4. Respect `JEECG_DEV_START_DIR` as an explicit workspace override when the caller needs to pin a specific Jeecg workspace.
 5. Default to the interactive session helpers unless the user explicitly asks for `nohup`, `后台`, `常驻`, or another detached background flow.

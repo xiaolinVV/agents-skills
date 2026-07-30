@@ -1,12 +1,20 @@
+# Archived: jeecg36-vue2-multi-repo-init
+
+归档日期：2026-07-30。
+
+本目录不再提供可自动发现的 `SKILL.md`，相关 Agent 链接已撤销。内容仅保留 JeecgBoot 3.6.x + Vue2 的 Gitee 多仓流程；其中账号硬编码已清除，远端写操作保留显式 Gate 和 dry-run 约束。
+
+以下内容不得用于 3.9.x、Vue3 或当前项目。
+
 ---
-name: jeecg-multi-repo-init
-description: "Initialize Jeecg-Boot multi-repo workspaces in two source modes: (1) framework-source from jeecg-boot_3 with business workspace naming, business org/repo creation, and origin/upstream rewrite, and (2) user-source from a user-selected Gitee org with upstream backfilled to jeecg-boot_3. Use when users want rapid Jeecg scaffold setup, BMAD v6 quick-update initialization, multi-root workspace generation, and SSH-first remote synchronization across repos."
+name: jeecg36-vue2-multi-repo-init
+description: "Initialize legacy JeecgBoot 3.6.x + Vue2 multi-repo workspaces from Gitee jeecg-boot_3, including ant-design-vue-jeecg, BMAD v6 quick-update, multi-root workspace generation, and SSH origin/upstream setup. Use only when the user explicitly requests this legacy Gitee workflow. Do not use for JeecgBoot 3.9.x, jeecgboot-vue3, monorepos, GitHub workflows, or unspecified current-version scaffolds."
 ---
 
-# Jeecg Multi Repo Init
+# JeecgBoot 3.6.x Vue2 Multi Repo Init
 
 ## Overview
-执行 Jeecg-Boot 多仓脚手架初始化，统一支持两种源组织模式：
+执行 JeecgBoot 3.6.x + Vue2 遗留多仓脚手架初始化，统一支持两种源组织模式：
 - `framework-source`：保持原有流程不变（从 `jeecg-boot_3` 启动，业务命名目录，创建业务组织与仓库）。
 - `user-source`：由用户选择任意已有组织作为克隆源，快速落地并回补 `upstream`，最后不自动 push。
 
@@ -15,6 +23,17 @@ description: "Initialize Jeecg-Boot multi-repo workspaces in two source modes: (
 - SSH 失败时立即中止并给修复命令，禁止自动回退 HTTPS。
 - `bmad` 与 `bmad-output` 本地目录必须改为 `_bmad`、`_bmad-output`。
 - BMAD 初始化固定用 `quick-update` 动作，并且执行后必须验证 `/bmad-help`。
+
+## Compatibility Gate
+
+本 Skill 只处理以下遗留契约：
+
+- 后端版本线为 JeecgBoot 3.6.x。
+- PC 前端仓库名和本地目录均为 `ant-design-vue-jeecg`。
+- 上游组织是用户明确确认的 `jeecg-boot_3`，Git 托管平台是 Gitee。
+- 用户明确要求多仓初始化，而不是当前项目的仓库内初始化。
+
+发现 `jeecgboot-vue3`、JeecgBoot 3.9.x、单体仓库或项目级初始化 Skill 时立即停止。不要猜测新版仓库集合，也不要把本遗留映射套到当前框架。
 
 ## Source Mode Decision
 先判定模式，再执行对应流程：
@@ -122,7 +141,7 @@ ssh-add -l
 ## Gitee Login Fallback
 登录态失效时按固定顺序执行：
 1. 选择短信登录。
-2. 输入手机号 `15505903237`。
+2. 要求用户在浏览器中自行输入手机号；禁止从 Skill、日志或仓库读取、保存账号标识。
 3. 点击“获取验证码”。
 4. 向用户索取验证码。
 5. 输入验证码后继续。
@@ -152,6 +171,8 @@ ssh-add -l
 
 `rewrite_git_remotes.py` 推荐用法：
 ```bash
+# 所有实际 remote 改写前先增加 --dry-run 检查目标
+
 # framework-source: 更新 origin + upstream（默认SSH）
 scripts/rewrite_git_remotes.py \
   --mode framework-source \
@@ -170,4 +191,4 @@ scripts/rewrite_git_remotes.py \
 ## References
 - `references/workflow-contract.md`
 - `references/playwright-gitee-checklist.md`
-- `/home/fjhc/dev/jeecg-boot/docs/architecture/development-flows/bmad-v6-multi-repo-initialization-flow.md`
+- 若当前遗留工作区存在 `docs/architecture/development-flows/bmad-v6-multi-repo-initialization-flow.md`，执行前读取它。

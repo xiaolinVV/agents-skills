@@ -39,11 +39,11 @@ If detection fails, rerun from the workspace root or set `JEECG_DEV_START_DIR=/a
 Use these scripts when the user wants the default foreground debugging mode with automatic port selection and cross-service wiring:
 
 ```bash
-~/.agents/skills/jeecg-dev-run/scripts/prepare-session-stack.sh
-~/.agents/skills/jeecg-dev-run/scripts/run-session-service.sh backend --skip-backend-build
-~/.agents/skills/jeecg-dev-run/scripts/run-session-service.sh frontend
-~/.agents/skills/jeecg-dev-run/scripts/session-status.sh
-~/.agents/skills/jeecg-dev-run/scripts/clear-session-stack.sh
+~/.agents/skills/jeecg36-vue2-dev-run/scripts/prepare-session-stack.sh
+~/.agents/skills/jeecg36-vue2-dev-run/scripts/run-session-service.sh backend --skip-backend-build
+~/.agents/skills/jeecg36-vue2-dev-run/scripts/run-session-service.sh frontend
+~/.agents/skills/jeecg36-vue2-dev-run/scripts/session-status.sh
+~/.agents/skills/jeecg36-vue2-dev-run/scripts/clear-session-stack.sh
 ```
 
 Behavior:
@@ -60,10 +60,10 @@ Behavior:
 Use these scripts for repeatable detached local start/stop:
 
 ```bash
-~/.agents/skills/jeecg-dev-run/scripts/start-local-stack.sh
-~/.agents/skills/jeecg-dev-run/scripts/stop-local-stack.sh
-~/.agents/skills/jeecg-dev-run/scripts/service-status.sh
-~/.agents/skills/jeecg-dev-run/scripts/inspect-local-stack.sh
+~/.agents/skills/jeecg36-vue2-dev-run/scripts/start-local-stack.sh
+~/.agents/skills/jeecg36-vue2-dev-run/scripts/stop-local-stack.sh
+~/.agents/skills/jeecg36-vue2-dev-run/scripts/service-status.sh
+~/.agents/skills/jeecg36-vue2-dev-run/scripts/inspect-local-stack.sh
 ```
 
 Behavior:
@@ -87,13 +87,13 @@ Useful examples:
 
 ```bash
 # Start backend + frontend with a backend rebuild
-~/.agents/skills/jeecg-dev-run/scripts/start-local-stack.sh
+~/.agents/skills/jeecg36-vue2-dev-run/scripts/start-local-stack.sh
 
 # Start only backend, skip the rebuild
-~/.agents/skills/jeecg-dev-run/scripts/start-local-stack.sh backend --skip-backend-build
+~/.agents/skills/jeecg36-vue2-dev-run/scripts/start-local-stack.sh backend --skip-backend-build
 
 # Stop everything started by the managed script
-~/.agents/skills/jeecg-dev-run/scripts/stop-local-stack.sh
+~/.agents/skills/jeecg36-vue2-dev-run/scripts/stop-local-stack.sh
 ```
 
 ## Backend

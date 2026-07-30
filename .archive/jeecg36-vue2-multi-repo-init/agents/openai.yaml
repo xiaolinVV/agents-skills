@@ -1,0 +1,7 @@
+interface:
+  display_name: "Jeecg 3.6 Vue2 Multi Repo Init"
+  short_description: "Initialize legacy Jeecg 3.6 Vue2 Gitee workspaces"
+  default_prompt: "Use $jeecg36-vue2-multi-repo-init to initialize a confirmed legacy JeecgBoot 3.6.x and Vue2 multi-repo workspace."
+
+policy:
+  allow_implicit_invocation: false

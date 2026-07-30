@@ -1,13 +1,32 @@
+# Archived: jeecg39-redis-guide
+
+归档日期：2026-07-30。
+
+本目录不再提供可自动发现的 `SKILL.md`。归档前已修正 `spring.data.redis`、`RedisUtil.removeAll` 前缀语义、Redisson 看门狗示例和缓存常量核对方式，供未来需要时恢复；当前不会全局自动触发。
+
+以下内容仅为可恢复的 JeecgBoot 3.9.x Redis 指南草案。
+
 ---
-name: jeecg-redis-guide
-description: jeecg-boot 低代码平台 Redis 使用指南。涵盖三种使用方式（Jeecg RedisUtil 工具类、Spring Cache 注解、RedisTemplate 原生操作）、分布式锁、缓存策略最佳实践。使用场景：在 jeecg-boot 项目中需要使用 Redis 缓存、分布式锁、会话管理、验证码等功能时；遇到 Redis 相关问题时；需要了解 jeecg-boot 缓存机制和配置时。
+name: jeecg39-redis-guide
+description: JeecgBoot 3.9.x and Spring Boot 3 Redis guidance covering the project-provided RedisUtil, Spring Cache, RedisTemplate, Redisson locks, cache keys, and troubleshooting. Use when implementing or diagnosing Redis behavior in a verified JeecgBoot 3.9.x repository. Do not use as authority for JeecgBoot 3.6.x, unknown versions, or projects whose current source and dependencies contradict these examples.
 ---
 
-# jeecg-boot Redis 使用指南
+# JeecgBoot 3.9.x Redis 使用指南
 
 ## Overview
 
-在 jeecg-boot 低代码平台中使用 Redis 实现缓存、分布式锁、会话管理等功能。
+在 JeecgBoot 3.9.x / Spring Boot 3 中使用 Redis 实现缓存、分布式锁和业务状态管理。
+
+## Compatibility Gate
+
+开始前先读取当前仓库根 `pom.xml`，确认 JeecgBoot 版本为 3.9.x。随后以当前项目配置、源码和解析到的依赖 API 为准：
+
+1. 检查实际激活 profile 对应的 `application-*.yml` 或 Nacos 配置。
+2. 搜索项目对 `RedisUtil`、`CacheConstant`、`RedisTemplate` 和 `RedissonClient` 的现有用法。
+3. 类来自依赖 Jar 时，用构建工具解析出的实际版本或 `javap` 核对方法签名，禁止凭本 Skill 重建接口。
+4. references 中的长示例只作为模式参考；与当前源码冲突时，源码和依赖契约优先。
+
+版本不是 3.9.x、版本无法确认，或项目已有更具体的 Redis Skill 时，停止使用本 Skill。
 
 ## Redis 配置
 
@@ -16,18 +35,19 @@ description: jeecg-boot 低代码平台 Redis 使用指南。涵盖三种使用�
 ```yaml
 # application-dev.yml
 spring:
-  redis:
-    database: 0
-    host: 127.0.0.1
-    port: 6379
-    password: ''
-    timeout: 3000ms
-    lettuce:
-      pool:
-        max-active: 8
-        max-idle: 8
-        min-idle: 0
-        max-wait: -1ms
+  data:
+    redis:
+      database: 0
+      host: 127.0.0.1
+      port: 6379
+      password: ''
+      timeout: 3000ms
+      lettuce:
+        pool:
+          max-active: 8
+          max-idle: 8
+          min-idle: 0
+          max-wait: -1ms
 
 # Redisson 分布式锁配置
 jeecg:
@@ -85,7 +105,7 @@ redisUtil.lSet("listKey", value);
 // 通用操作
 redisUtil.hasKey("key");
 redisUtil.expire("key", 1800);
-redisUtil.removeAll("prefix:*");  // 批量删除（推荐）
+redisUtil.removeAll("prefix:");  // 传前缀；框架实现会追加 *
 ```
 
 ### 方式二：Spring Cache 注解（推荐用于方法缓存）
@@ -203,6 +223,8 @@ redisUtil.del(key);  // 校验成功后删除
 
 ### 用户 Token 管理
 
+不要为现有登录链路另造 Token 缓存协议。以下常量只适用于当前项目仍启用 Shiro/JWT 的情况；若启用 Sa-Token profile，应遵循对应认证实现和配置。
+
 ```java
 // 登录
 String token = JwtUtil.sign(username, password);
@@ -252,7 +274,7 @@ public Object around(ProceedingJoinPoint point, PreventDuplicateSubmit preventDu
 1. **所有缓存必须设置 TTL**，避免内存泄漏
 2. **使用 CacheConstant 常量**，避免 key 硬编码
 3. **更新数据时清除缓存**，使用 `@CacheEvict` 或手动删除
-4. **使用 `redisUtil.removeAll(prefix)`** 代替 `keys + del`
+4. **调用 `redisUtil.removeAll(prefix)` 时传前缀，不附加 `*`**；执行前确认当前依赖实现仍采用前缀扫描
 5. **分布式锁必须在 finally 中释放**
 6. **存储对象需要 getter/setter**（Jackson 序列化要求）
 
@@ -274,7 +296,7 @@ public Object around(ProceedingJoinPoint point, PreventDuplicateSubmit preventDu
 ## 资源
 
 ### [examples.md](references/examples.md)
-完整代码示例，包括：
+模式示例，使用前必须按 Compatibility Gate 核对当前 API，包括：
 - RedisUtil 所有方法用法
 - Spring Cache 所有注解
 - RedisTemplate 各种数据结构操作
@@ -282,11 +304,11 @@ public Object around(ProceedingJoinPoint point, PreventDuplicateSubmit preventDu
 - 常见业务场景代码模板
 
 ### [constants.md](references/constants.md)
-缓存常量参考，包括：
-- CacheConstant 完整定义
-- CommonConstant 缓存常量
-- Key 命名规范
-- TTL 建议
+缓存常量核对指南，包括：
+- 当前源码与依赖的核对顺序
+- 常用 CacheConstant / CommonConstant 名称
+- Key 命名和失效规则
+- TTL 的来源与业务建议
 
 ### [troubleshooting.md](references/troubleshooting.md)
 问题排查指南，包括：
@@ -303,10 +325,10 @@ public Object around(ProceedingJoinPoint point, PreventDuplicateSubmit preventDu
 
 | 文件 | 路径 |
 |------|------|
-| Redis 配置 | `application-dev.yml` (第 171-177 行) |
+| Redis 配置 | 当前 profile 的 `application-*.yml` 或 Nacos 配置，键为 `spring.data.redis` |
 | RedisUtil | `org.jeecg.common.util.RedisUtil` |
 | CacheConstant | `org.jeecg.common.constant.CacheConstant` |
 | RedisConfig | `org.jeecg.common.modules.redis.config.RedisConfig` |
 | 字典缓存示例 | `SysDictServiceImpl.java` |
 | DictAspect | `org.jeecg.common.aspect.DictAspect` |
-| Shiro Redis | `org.jeecg.config.shiro.ShiroRealm` |
+| 认证缓存 | 按当前启用的 Shiro/JWT 或 Sa-Token profile 查找实际实现 |

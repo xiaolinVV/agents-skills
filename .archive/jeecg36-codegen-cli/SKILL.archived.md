@@ -1,12 +1,30 @@
+# Archived: jeecg36-codegen-cli
+
+归档日期：2026-07-30。
+
+本目录不再提供可自动发现的 `SKILL.md`。内容已限定为 JeecgBoot 3.6.3 + Vue2 遗留代码生成链，仅在未来人工恢复旧项目维护能力时参考；当前项目使用项目级官方代码生成 Skill。
+
+以下内容保留版本边界和原执行规范，不代表当前框架能力。
+
 ---
-name: jeecg-codegen-cli
-description: Use when users ask to run Jeecg-boot code generation via jeecg-codegen-cli (DDL→spec→dry-run→template render), especially for single table, tree table, or one-to-many flows (classic/JVXE/ERP/innerTable/tab), and when you must enforce CLI规范与模板生成、校验spec（如BigDecimal全限定名）。
+name: jeecg36-codegen-cli
+description: Legacy JeecgBoot 3.6.3 + Vue2 code generation through the project-local jeecg-codegen-cli module (DDL→spec→dry-run→FreeMarker render). Use only when the repository actually contains jeecg-codegen-cli, its root pom version is 3.6.3, and the frontend is ant-design-vue-jeecg. Do not use for JeecgBoot 3.9.x, jeecgboot-vue3, or repositories with a repo-local codegen skill.
 ---
 
-# Jeecg Codegen CLI
+# JeecgBoot 3.6.3 Codegen CLI
 
 ## Overview
-执行 Jeecg-boot 的 CLI 代码生成规范：基于 DDL 生成 spec，再通过模板渲染生成标准 CRUD 代码，并执行必要的 spec 校验（如 BigDecimal 全限定名）。
+执行 JeecgBoot 3.6.3 的遗留 CLI 代码生成规范：基于 DDL 生成 spec，再通过模板渲染生成标准 CRUD 代码，并执行必要的 spec 校验（如 BigDecimal 全限定名）。
+
+## Compatibility Gate
+
+执行任何构建或生成前，必须同时确认：
+
+- 后端根目录存在 `jeecg-codegen-cli/`，且根 `pom.xml` 的项目版本为 `3.6.3`。
+- 前端目录为 `ant-design-vue-jeecg/`。
+- 当前仓库没有更具体的项目级代码生成 Skill。
+
+任一条件不满足就停止使用本 Skill。JeecgBoot 3.9.x 或 `jeecgboot-vue3` 项目应使用其项目级官方代码生成 Skill，禁止拿 3.6.3 的 CLI/Jar 和模板规则硬套。
 
 
 ## Path Resolution
@@ -55,8 +73,8 @@ description: Use when users ask to run Jeecg-boot code generation via jeecg-code
 - 提案未审批前禁止执行 CLI 渲染（生成代码属于实现阶段）。
 
 ## Authoritative Spec
-- 规范来源以 references 为唯一权威，不做其它自动探测。
-- 默认以 `references/Jeecg-boot代码生成执行规范（CLI）.md` 为唯一权威规范。
+- 对已通过 Compatibility Gate 的 3.6.3 遗留项目，以 references 为本 Skill 的版本内权威规范。
+- 默认使用 `references/Jeecg-boot代码生成执行规范（CLI）.md`，不得把它解释为 JeecgBoot 最新版规范。
 - 仅当用户明确提供其它规范文档路径时，才切换为用户指定文档。
 - 执行 CLI 生成时，必须严格遵循规范文档要求，禁止自行臆断。
 

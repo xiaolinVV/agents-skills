@@ -1,3 +1,11 @@
+# Archived: jeecg-dict-annotation
+
+归档日期：2026-07-30。
+
+本目录不再提供可自动发现的 `SKILL.md`。该能力与项目级官方 `jeecg-codegen` 和 `jeecg-system` 高度重叠，且旧参考包含 `spring.redis`、无效的 `@AutoDict(false)` 等与当前 JeecgBoot 3.9.x 不一致的规则。模板资产和参考资料保留用于 Git 历史，不得作为当前版本权威规范直接恢复。
+
+以下内容仅保留用于人工参考。
+
 ---
 name: jeecg-dict-annotation
 description: Guide for using Jeecg-boot's @Dict annotation to auto-translate dictionary values and foreign key IDs to display text. Use when adding dictionary translation to entity fields, configuring frontend columns for translated text, or troubleshooting @Dict annotation issues. Covers both normal dictionary (sys_dict/sys_dict_item) and table dictionary modes.

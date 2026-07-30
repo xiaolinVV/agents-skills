@@ -5,7 +5,7 @@
 - 优先复用浏览器已登录态。
 - 登录失效时走短信登录：
   1. 选择短信登录
-  2. 输入手机号 `15505903237`
+  2. 由用户在浏览器中自行输入手机号；禁止把账号标识写入 Skill、日志或仓库
   3. 点击“获取验证码”
   4. 向用户索取验证码
   5. 输入验证码并继续
@@ -13,6 +13,8 @@
 ## Mode A: framework-source（原流程）
 
 目标：从 `jeecg-boot_3` 初始化后，创建业务组织与业务仓库。
+
+前置：仅适用于用户已确认的 JeecgBoot 3.6.x + `ant-design-vue-jeecg` 遗留仓库集合。
 
 步骤：
 1. 打开 `https://gitee.com/organizations/jeecg-boot_3/projects`。

@@ -1,5 +1,7 @@
 # Workflow Contract
 
+> 版本边界：本契约仅适用于 JeecgBoot 3.6.x + Vue2 `ant-design-vue-jeecg` 遗留多仓工作区。不得用于 3.9.x、`jeecgboot-vue3` 或单体仓库。
+
 ## 1) 双源组织模式
 
 - `framework-source`：原流程，不变。
@@ -107,5 +109,5 @@ npx bmad-method@6.0.3 install \
 
 ## 10) 参考流程文档
 
-若本地存在以下文档，先读取并遵循其中约束：
-- `/home/fjhc/dev/jeecg-boot/docs/architecture/development-flows/bmad-v6-multi-repo-initialization-flow.md`
+若当前工作区存在以下文档，先读取并遵循其中约束：
+- `docs/architecture/development-flows/bmad-v6-multi-repo-initialization-flow.md`

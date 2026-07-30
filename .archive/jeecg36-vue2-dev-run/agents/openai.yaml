@@ -1,0 +1,7 @@
+interface:
+  display_name: "Jeecg 3.6 Vue2 Dev Run"
+  short_description: "Run and debug legacy Jeecg 3.6 Vue2 workspaces"
+  default_prompt: "Use $jeecg36-vue2-dev-run to start, stop, or troubleshoot a verified JeecgBoot 3.6.x and Vue2 workspace."
+
+policy:
+  allow_implicit_invocation: false

@@ -232,7 +232,7 @@ java -jar "$CLI_JAR" \
 Use `scripts/gen_cli_commands.py` to print commands with auto-resolved paths.
 Example:
 ```bash
-python3 /Users/zhangshaolin/.codex/skills/jeecg-codegen-cli/scripts/gen_cli_commands.py \
+python3 ~/.agents/skills/jeecg36-codegen-cli/scripts/gen_cli_commands.py \
   --ddl specs/cli_products.sql \
   --spec-out cli_products.yaml \
   --jsp-mode one \

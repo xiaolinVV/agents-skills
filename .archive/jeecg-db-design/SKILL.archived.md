@@ -1,3 +1,11 @@
+# Archived: jeecg-db-design
+
+归档日期：2026-07-30。
+
+本目录不再提供可自动发现的 `SKILL.md`。旧规范强制 `org_code`、复数表名和固定文档目录，与当前 JeecgBoot 3.9.x 及项目级官方代码生成规范冲突。CRUD 建表使用项目级 `jeecg-codegen`；如需恢复独立数据库设计能力，必须先按目标版本重写规范，不得直接恢复此入口。
+
+以下内容仅保留用于 Git 历史和人工参考。
+
 ---
 name: jeecg-db-design
 description: "Design or review database tables for the jeecg-boot low-code platform. Use when users ask to design table schemas, define fields/keys/indexes, or validate DB structure against the jeecg-boot database design standard. Typical triggers: ‘设计一张业务表’, ‘给这个模块出数据库表结构’, ‘按照规范检查表设计’."

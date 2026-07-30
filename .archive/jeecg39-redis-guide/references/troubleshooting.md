@@ -1,5 +1,7 @@
 # jeecg-boot Redis 常见问题排查
 
+> 适用边界：仅用于已确认的 JeecgBoot 3.9.x / Spring Boot 3 项目。命令和 Java 片段执行前必须与当前 profile 配置、项目源码及实际依赖 API 对照。
+
 ## 目录
 1. [连接问题](#连接问题)
 2. [序列化问题](#序列化问题)
@@ -35,22 +37,24 @@ netstat -an | grep 6379
 ```yaml
 # application-dev.yml
 spring:
-  redis:
-    host: 127.0.0.1  # 确认 IP 正确
-    port: 6379        # 确认端口正确
-    password: ''      # 如果设置了密码，必须配置
-    database: 0
-    timeout: 3000ms   # 增加超时时间
+  data:
+    redis:
+      host: 127.0.0.1  # 确认 IP 正确
+      port: 6379        # 确认端口正确
+      password: ''      # 如果设置了密码，必须配置
+      database: 0
+      timeout: 3000ms   # 增加超时时间
 
 # Lettuce 连接池配置
 spring:
-  redis:
-    lettuce:
-      pool:
-        max-active: 8   # 最大连接数
-        max-idle: 8     # 最大空闲连接
-        min-idle: 0     # 最小空闲连接
-        max-wait: -1ms  # 获取连接最大等待时间
+  data:
+    redis:
+      lettuce:
+        pool:
+          max-active: 8   # 最大连接数
+          max-idle: 8     # 最大空闲连接
+          min-idle: 0     # 最小空闲连接
+          max-wait: -1ms  # 获取连接最大等待时间
 ```
 
 3. **检查防火墙**
@@ -100,14 +104,15 @@ redis.connectionpool.TimeoutException: No available connection
 
 ```yaml
 spring:
-  redis:
-    lettuce:
-      pool:
-        max-active: 20   # 增加最大连接数
-        max-idle: 10
-        min-idle: 5
-        max-wait: 3000ms # 设置等待超时
-      shutdown-timeout: 100ms
+  data:
+    redis:
+      lettuce:
+        pool:
+          max-active: 20   # 增加最大连接数
+          max-idle: 10
+          min-idle: 5
+          max-wait: 3000ms # 设置等待超时
+        shutdown-timeout: 100ms
 ```
 
 ---
@@ -265,7 +270,7 @@ public void updateData(Data data) {
     dataMapper.updateById(data);
     // 手动清除相关缓存
     redisUtil.del("data:" + data.getId());
-    redisUtil.removeAll("data:list:*");
+    redisUtil.removeAll("data:list:");
 }
 ```
 
@@ -585,15 +590,8 @@ public class RedisMemoryMonitor {
     }
 }
 
-// 3. 定期清理过期 key
-@Scheduled(cron = "0 0 2 * * ?") // 每天凌晨2点
-public void cleanupExpiredKeys() {
-    // 手动触发 Redis 的过期 key 清理
-    redisUtil.execute((RedisCallback<Void>) connection -> {
-        connection.memoryUsage("".getBytes());
-        return null;
-    });
-}
+// 3. 不要伪造 RedisUtil.execute 等不存在的方法来“清理过期 key”
+// Redis 自己负责过期键回收；业务侧负责给缓存设置 TTL，并监控 maxmemory 与淘汰策略。
 ```
 
 ### 问题：内存碎片严重
@@ -649,10 +647,15 @@ public void safeLockMethod(String id) {
 **解决方案**：
 
 ```java
-// 使用看门狗机制（默认）
-// leaseTime = -1 时，Redisson 会自动续期
-if (lock.tryLock(-1, 30, TimeUnit.SECONDS)) {
-    // 业务逻辑
+// 使用不带 leaseTime 的重载才能启用默认看门狗续期；具体重载以当前 Redisson 版本为准
+if (lock.tryLock(10, TimeUnit.SECONDS)) {
+    try {
+        // 业务逻辑
+    } finally {
+        if (lock.isHeldByCurrentThread()) {
+            lock.unlock();
+        }
+    }
 }
 
 // 或设置足够长的 leaseTime

@@ -1,5 +1,7 @@
 # jeecg-boot Redis 代码示例
 
+> 适用边界：这些是 JeecgBoot 3.9.x 的模式示例，不是可直接粘贴的完整实现。使用前必须核对当前项目解析到的 `RedisUtil`、`CacheConstant`、Spring Data Redis 和 Redisson API。Token/在线用户示例仅适用于仍启用 Shiro/JWT 的 profile，不适用于 Sa-Token profile。
+
 ## 目录
 1. [RedisUtil 工具类](#redisutil-工具类)
 2. [Spring Cache 注解](#spring-cache-注解)
@@ -101,7 +103,7 @@ Object task = redisTemplate.opsForList().leftPop("queue:task");
 
 ```java
 // 批量删除（推荐）
-redisUtil.removeAll("sys:cache:dict*"); // 删除所有前缀匹配的key
+redisUtil.removeAll("sys:cache:dict"); // 传前缀；框架实现会追加 *
 
 // 批量设置过期
 List<String> keys = Arrays.asList("key1", "key2", "key3");
@@ -880,7 +882,7 @@ public class DataReportService {
     }
 
     public void invalidateReport(String reportId) {
-        redisUtil.removeAll("report:" + reportId + ":*");
+        redisUtil.removeAll("report:" + reportId + ":");
     }
 }
 ```
